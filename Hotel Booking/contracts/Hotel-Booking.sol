@@ -39,4 +39,18 @@ contract Hotel{
 
     mapping(uint => RoomAgreement) public Agreements;
 
+    struct Rent{
+        uint rent_id;
+        uint room_id;
+        uint agreement_id;
+        string room_name;
+        string room_address;
+        uint rent_per_month;
+        uint timestamp;
+        address payable landlord_address;
+        address payable tenant_address;
+    }
+
+    mapping(uint => Rent) public Rents;
+
 }
