@@ -53,4 +53,55 @@ contract Hotel{
 
     mapping(uint => Rent) public Rents;
 
+    modifier OnlyLandlord(uint _id){
+        require(msg.sender == Rooms[_id].landlord, "Only landlord can call this function");
+        _;
+    }
+
+    modifier OnlyTenant(uint _id){
+        require(msg.sender == Rooms[_id].current_tenant, "Only tenants can call this function");
+        _;
+    }
+
+    modifier Occupied(uint _id){
+        require(Rooms[_id].vacant == true, "This room is occupied");
+        _;
+    }
+
+    modifier CheckAmount(uint _id){
+        require(msg.value >= uint(Rooms[_id].rent_per_month * 1 ether), "You have insufficient amount for the rent");
+        _;
+    }
+
+    modifier enoughAgreement(uint _id){
+        require(msg.value >= uint(uint(Rooms[_id].rent_per_month) + uint(Rooms[_id].security_deposit)), "Not enough Agreement fee");
+        _;
+    }
+
+    modifier sameTenant(uint _id){
+        require(msg.sender == Rooms[_id].current_tenant, "No previous agreement");
+        _;
+    }
+
+    modifier AgreementTimeLeft(uint _id){
+        uint agrId = Rooms[_id].agreement_id;
+        uint time = Agreements[agrId].timestamp + Agreements[agrId].lockperiod;
+        require(block.timestamp < time, "Agreement ended");
+        _;
+    }
+
+    modifier AgreementTimesUp(uint _id){
+        uint agrId = Rooms[_id].agreement_id;
+        uint time = Agreements[agrId].timestamp + Agreements[agrId].lockperiod;
+        require(block.timestamp > time, "There is still some time left");
+        _;
+    }
+
+    modifier RentTimesUp(uint _id){
+        uint time = Rooms[_id].timestamp + 30 days;
+        require(block.timestamp >= time, "Times Up");
+        _;
+    }
+
+    
 }
