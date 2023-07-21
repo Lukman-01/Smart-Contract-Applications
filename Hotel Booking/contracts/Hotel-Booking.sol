@@ -195,47 +195,87 @@ contract Hotel{
         OnlyTenant(_roomId) notOccupied(_roomId) 
         CheckAmount(_roomId) enoughAgreement(_roomId) AgreementTimesUp(_roomId) {
     // Increment the total number of agreements
-    no_of_agreement++;
-    uint agreementId = no_of_agreement;
+        no_of_agreement++;
+        uint agreementId = no_of_agreement;
 
+        // Get the room details
+        Room storage room = Rooms[_roomId];
+
+        // Create a new RoomAgreement struct instance and initialize its values
+        RoomAgreement memory newAgreement = RoomAgreement(
+            _roomId,
+            agreementId,
+            room.room_name,
+            room.room_address,
+            room.rent_per_month,
+            room.security_deposit,
+            _lockperiod,
+            block.timestamp, // Set the current timestamp as the agreement's creation timestamp
+            room.landlord,
+            payable(msg.sender) // Set the tenant as the one who signs the agreement
+        );
+
+        // Store the new agreement in the Agreements mapping using its ID as the key
+        Agreements[agreementId] = newAgreement;
+
+        // Update the room's agreement_id and current_tenant fields
+        room.agreement_id = agreementId;
+        room.current_tenant = payable(msg.sender);
+        room.vacant = false; // Set the room as occupied
+        room.timestamp = block.timestamp;
+
+        // Emit an event to notify the signing of the agreement
+        emit AgreementSigned(
+            agreementId,
+            _roomId,
+            room.room_name,
+            room.room_address,
+            room.rent_per_month,
+            room.security_deposit,
+            _lockperiod,
+            room.landlord,
+            msg.sender
+        );
+    }
+
+    function payRent(uint _roomId) external payable OnlyTenant(_roomId) AgreementTimeLeft(_roomId) RentTimesUp(_roomId) CheckAmount(_roomId) {
     // Get the room details
-    Room storage room = Rooms[_roomId];
+        Room storage room = Rooms[_roomId];
+        uint agreementId = room.agreement_id;
 
-    // Create a new RoomAgreement struct instance and initialize its values
-    RoomAgreement memory newAgreement = RoomAgreement(
-        _roomId,
-        agreementId,
-        room.room_name,
-        room.room_address,
-        room.rent_per_month,
-        room.security_deposit,
-        _lockperiod,
-        block.timestamp, // Set the current timestamp as the agreement's creation timestamp
-        room.landlord,
-        payable(msg.sender) // Set the tenant as the one who signs the agreement
-    );
+        // Update the rent counter
+        no_of_rent++;
+        uint rentId = no_of_rent;
 
-    // Store the new agreement in the Agreements mapping using its ID as the key
-    Agreements[agreementId] = newAgreement;
+        // Create a new Rent struct instance and initialize its values
+        Rent memory newRent = Rent(
+            rentId,
+            _roomId,
+            agreementId,
+            room.room_name,
+            room.room_address,
+            room.rent_per_month,
+            block.timestamp, // Set the current timestamp as the rent payment timestamp
+            room.landlord,
+            room.current_tenant
+        );
 
-    // Update the room's agreement_id and current_tenant fields
-    room.agreement_id = agreementId;
-    room.current_tenant = payable(msg.sender);
-    room.vacant = false; // Set the room as occupied
-    room.timestamp = block.timestamp;
+        // Store the new rent payment in the Rents mapping using its ID as the key
+        Rents[rentId] = newRent;
 
-    // Emit an event to notify the signing of the agreement
-    emit AgreementSigned(
-        agreementId,
-        _roomId,
-        room.room_name,
-        room.room_address,
-        room.rent_per_month,
-        room.security_deposit,
-        _lockperiod,
-        room.landlord,
-        msg.sender
-    );
-}
+        // Transfer the rent amount to the landlord
+        room.landlord.transfer(room.rent_per_month * 1 ether);
+
+        // Emit an event to notify the rent payment
+        emit RentPaid(
+            rentId,
+            _roomId,
+            room.room_name,
+            room.room_address,
+            room.rent_per_month,
+            room.landlord,
+            room.current_tenant
+        );
+    }
 
 }
