@@ -103,5 +103,52 @@ contract Hotel{
         _;
     }
 
+    event RoomAdded(
+    uint indexed roomId,
+    string room_name,
+    string room_address,
+    uint rent_per_month,
+    uint security_deposit,
+    address landlord
+    );
+
+    event AgreementSigned(
+    uint indexed agreementId,
+    uint roomId,
+    string room_name,
+    string room_address,
+    uint rent_per_month,
+    uint security_deposit,
+    uint lockperiod,
+    address landlord,
+    address tenant
+    );
+
+    event RentPaid(
+    uint rentId,
+    uint indexed roomId,
+    string room_name,
+    string room_address,
+    uint rent_per_month,
+    address indexed landlord,
+    address indexed tenant
+    );
+
+    event AgreementCompleted(
+    uint indexed roomId,
+    string room_name,
+    string room_address,
+    uint rent_per_month,
+    address indexed landlord
+    );
+
+    event AgreementTerminated(
+    uint indexed roomId,
+    string room_name,
+    string room_address,
+    uint rent_per_month,
+    address indexed landlord
+    );
+
     
 }
