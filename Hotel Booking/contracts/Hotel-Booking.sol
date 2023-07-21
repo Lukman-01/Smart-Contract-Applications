@@ -278,4 +278,23 @@ contract Hotel{
         );
     }
 
+    function agreementCompleted(uint _roomId) external OnlyLandlord(_roomId) AgreementTimeLeft(_roomId) {
+        // Get the room details
+        Room storage room = Rooms[_roomId];
+
+        // Set the room as vacant and clear the agreement details
+        room.vacant = true;
+        room.agreement_id = 0;
+        room.current_tenant = payable(address(0));
+
+        // Emit an event to notify the completion of the agreement
+        emit AgreementCompleted(
+            _roomId,
+            room.room_name,
+            room.room_address,
+            room.rent_per_month,
+            room.landlord
+        );
+    }
+
 }
