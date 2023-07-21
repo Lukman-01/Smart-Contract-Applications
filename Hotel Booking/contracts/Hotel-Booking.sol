@@ -150,5 +150,42 @@ contract Hotel{
     address indexed landlord
     );
 
-    
+    function addRoom(
+    string memory _roomName,
+    string memory _roomAddress,
+    uint _rentPerMonth,
+    uint _securityDeposit
+    ) external {
+        require(msg.sender != address(0));
+        no_of_rooms++; // Increment the total number of rooms
+        uint roomId = no_of_rooms; // Assign the new room ID
+
+        // Create a new Room struct instance and initialize its values
+        Room memory newRoom = Room({
+            room_id: roomId,
+            agreement_id: 0, // Initialize agreement_id to 0 since it's a new room and has no agreement yet
+            room_name: _roomName,
+            room_address: _roomAddress,
+            rent_per_month: _rentPerMonth,
+            security_deposit: _securityDeposit,
+            timestamp: block.timestamp, // Set the current timestamp as the room's creation timestamp
+            vacant: true, // Set vacant to true since the room is initially available for rent
+            landlord: payable(msg.sender), // Set the landlord as the one who adds the room
+            current_tenant: payable(address(0)) // Set the current_tenant to address(0) since there's no tenant initially
+        });
+
+        // Store the new room in the mapping using its ID as the key
+        Rooms[roomId] = newRoom;
+
+        // Emit an event to notify the addition of a new room
+        emit RoomAdded(
+            roomId,
+            _roomName,
+            _roomAddress,
+            _rentPerMonth,
+            _securityDeposit,
+            msg.sender
+        );
+    }
+
 }
