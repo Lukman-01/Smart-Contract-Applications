@@ -63,7 +63,7 @@ contract Hotel{
         _;
     }
 
-    modifier Occupied(uint _id){
+    modifier notOccupied(uint _id){
         require(Rooms[_id].vacant == true, "This room is occupied");
         _;
     }
@@ -187,5 +187,55 @@ contract Hotel{
             msg.sender
         );
     }
+
+    function signAgreement(
+        uint _roomId, 
+        uint _lockperiod
+        ) external payable 
+        OnlyTenant(_roomId) notOccupied(_roomId) 
+        CheckAmount(_roomId) enoughAgreement(_roomId) AgreementTimesUp(_roomId) {
+    // Increment the total number of agreements
+    no_of_agreement++;
+    uint agreementId = no_of_agreement;
+
+    // Get the room details
+    Room storage room = Rooms[_roomId];
+
+    // Create a new RoomAgreement struct instance and initialize its values
+    RoomAgreement memory newAgreement = RoomAgreement(
+        _roomId,
+        agreementId,
+        room.room_name,
+        room.room_address,
+        room.rent_per_month,
+        room.security_deposit,
+        _lockperiod,
+        block.timestamp, // Set the current timestamp as the agreement's creation timestamp
+        room.landlord,
+        payable(msg.sender) // Set the tenant as the one who signs the agreement
+    );
+
+    // Store the new agreement in the Agreements mapping using its ID as the key
+    Agreements[agreementId] = newAgreement;
+
+    // Update the room's agreement_id and current_tenant fields
+    room.agreement_id = agreementId;
+    room.current_tenant = payable(msg.sender);
+    room.vacant = false; // Set the room as occupied
+    room.timestamp = block.timestamp;
+
+    // Emit an event to notify the signing of the agreement
+    emit AgreementSigned(
+        agreementId,
+        _roomId,
+        room.room_name,
+        room.room_address,
+        room.rent_per_month,
+        room.security_deposit,
+        _lockperiod,
+        room.landlord,
+        msg.sender
+    );
+}
 
 }
