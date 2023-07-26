@@ -92,7 +92,7 @@ contract Hotel {
         _;
     }
 
-    modifier notOccupied(uint _id) {
+    modifier NotOccupied(uint _id) {
         require(Rooms[_id].vacant == true, "This room is occupied");
         _;
     }
@@ -102,12 +102,12 @@ contract Hotel {
         _;
     }
 
-    modifier enoughAgreement(uint _id) {
+    modifier EnoughAgreement(uint _id) {
         require(msg.value >= uint(uint(Rooms[_id].rent_per_month) + uint(Rooms[_id].security_deposit)), "Not enough Agreement fee");
         _;
     }
 
-    modifier sameTenant(uint _id) {
+    modifier SameTenant(uint _id) {
         require(msg.sender == Rooms[_id].current_tenant, "No previous agreement");
         _;
     }
@@ -251,9 +251,9 @@ contract Hotel {
         uint _lockperiod
     ) external payable
         OnlyTenant(_roomId)
-        notOccupied(_roomId)
+        NotOccupied(_roomId)
         CheckAmount(_roomId)
-        enoughAgreement(_roomId)
+        EnoughAgreement(_roomId)
         AgreementTimesUp(_roomId)
     {
         // Increment the total number of agreements

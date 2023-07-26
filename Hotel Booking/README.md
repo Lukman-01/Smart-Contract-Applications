@@ -18,4 +18,4 @@ Based on the V1 smart contract, some potential security vulnerabilities and to b
 
 8. **Lack of Withdrawal Mechanism for Security Deposit**: Currently, there is no way for the tenant to withdraw their security deposit after the agreement ends successfully. Consider adding a function for the tenant to reclaim their security deposit when the agreement is completed. Done.
 
-9. **Inconsistent Naming Conventions**: Ensure consistent naming conventions for variables and functions to improve code readability and avoid potential confusion.
+9. **Inconsistent Naming Conventions**: Ensure consistent naming conventions for variables and functions to improve code readability and avoid potential confusion. Done.
