@@ -14,7 +14,7 @@ Based on the V1 smart contract, some potential security vulnerabilities and to b
 
 6. **Lack of Error Handling in Transfer Functions**: The contract uses `transfer` to send ether, which may revert the entire transaction if the transfer fails. Consider using `send` or `call` and implementing appropriate error handling to avoid potential denial of service (DoS) vulnerabilities. Done.
 
-7. **No Termination Penalty**: The `agreementTerminated` function allows the landlord to terminate an agreement without any penalty for early termination. Consider adding a penalty mechanism to protect the tenant's interests.
+7. **No Termination Penalty**: The `agreementTerminated` function allows the landlord to terminate an agreement without any penalty for early termination. Consider adding a penalty mechanism to protect the tenant's interests. Done.
 
 8. **Lack of Withdrawal Mechanism for Security Deposit**: Currently, there is no way for the tenant to withdraw their security deposit after the agreement ends successfully. Consider adding a function for the tenant to reclaim their security deposit when the agreement is completed.
 

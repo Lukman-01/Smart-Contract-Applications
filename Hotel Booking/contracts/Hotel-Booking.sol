@@ -19,9 +19,11 @@ contract Hotel {
     address payable landlord;
     address payable tenant;
 
-    uint no_of_rooms = 0;
-    uint no_of_rent = 0;
-    uint no_of_agreement = 0;
+    uint public no_of_rooms = 0;
+    uint public no_of_rent = 0;
+    uint public no_of_agreement = 0;
+    uint public terminationPenaltyPercentage = 10;
+    uint public terminationPenalty;
 
     // Room struct to store room details
     struct Room {
@@ -179,6 +181,7 @@ contract Hotel {
 
     constructor (){
         contractOwner = msg.sender;
+        terminationPenalty = 0;
     }
 
     function transferOwnership(address newOwner) external OnlyOwner {
@@ -377,11 +380,20 @@ contract Hotel {
      * @dev Function for landlords to terminate an agreement for a room
      * @param _roomId The ID of the room to terminate the agreement for.
      */
-    function agreementTerminated(uint _roomId) external
-        OnlyLandlord(_roomId)
-    {
+
+    // Update the agreementTerminated function to apply the termination penalty
+    function agreementTerminated(uint _roomId) external OnlyLandlord(_roomId) {
         // Get the room details
         Room storage room = Rooms[_roomId];
+
+        require(terminationPenalty > 0, "Termination penalty must be greater than zero");
+
+        // Calculate the termination penalty based on the security deposit
+        uint terminationPenalty = room.security_deposit.mul(terminationPenaltyPercentage).div(100);
+
+        // Transfer the termination penalty to the landlord
+        (bool success, ) = landlord.call{value: terminationPenalty}("");
+        require(success, "Transfer failed");
 
         // Set the room as vacant and clear the agreement details
         room.vacant = true;
