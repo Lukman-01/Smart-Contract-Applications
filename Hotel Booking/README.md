@@ -1,8 +1,8 @@
 # Hotel Booking Contract Project
 
-Based on the V1 smart contract, some potential security vulnerabilities and considerations are as follows:
+Based on the V1 smart contract, some potential security vulnerabilities and to be solved are as follows:
 
-1. **No Access Control for Adding Rooms**: Currently, any address can call the `addRoom` function and add a new room to the contract. Consider adding a modifier or function to restrict access to only authorized parties, such as the contract owner or specific roles.
+1. **No Access Control for Adding Rooms**: Currently, any address can call the `addRoom` function and add a new room to the contract. Consider adding a modifier or function to restrict access to only authorized parties, such as the contract owner or specific roles. Done.
 
 2. **Lack of Ownership Management**: The contract does not have a mechanism for transferring ownership, which could be risky if the landlord's address needs to be changed or updated. Adding a function to transfer ownership to a new address could be useful.
 

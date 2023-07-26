@@ -9,6 +9,7 @@ pragma solidity ^0.8.9;
  */
 contract Hotel {
     // State variables
+    address public contractOwner;
     address payable landlord;
     address payable tenant;
 
@@ -61,6 +62,11 @@ contract Hotel {
         uint timestamp;
         address payable landlord_address;
         address payable tenant_address;
+    }
+
+    modifier OnlyOwner(){
+        require(msg.sender == contractOwner, "You are not the owner of the contract");
+        _;
     }
 
     // Mapping to store Rent objects by their IDs
@@ -165,6 +171,9 @@ contract Hotel {
         address indexed landlord
     );
 
+    constructor (){
+        contractOwner = msg.sender;
+    }
     /**
      * @dev Function for adding a new room
      * @param _roomName The name of the room.
@@ -177,7 +186,7 @@ contract Hotel {
         string memory _roomAddress,
         uint _rentPerMonth,
         uint _securityDeposit
-    ) external {
+    ) external OnlyOwner{
         // Check if the sender address is valid
         require(msg.sender != address(0));
 
