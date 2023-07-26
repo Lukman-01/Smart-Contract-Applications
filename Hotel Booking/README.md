@@ -4,7 +4,7 @@ Based on the V1 smart contract, some potential security vulnerabilities and to b
 
 1. **No Access Control for Adding Rooms**: Currently, any address can call the `addRoom` function and add a new room to the contract. Consider adding a modifier or function to restrict access to only authorized parties, such as the contract owner or specific roles. Done.
 
-2. **Lack of Ownership Management**: The contract does not have a mechanism for transferring ownership, which could be risky if the landlord's address needs to be changed or updated. Adding a function to transfer ownership to a new address could be useful.
+2. **Lack of Ownership Management**: The contract does not have a mechanism for transferring ownership, which could be risky if the landlord's address needs to be changed or updated. Adding a function to transfer ownership to a new address could be useful. Done.
 
 3. **No Limit on Lock Period**: The `signAgreement` function allows tenants to set any value for the `_lockperiod`, which could potentially be abused. Consider adding a maximum limit for the lock period or using a more secure approach to determine the agreement duration.
 

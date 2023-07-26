@@ -174,6 +174,11 @@ contract Hotel {
     constructor (){
         contractOwner = msg.sender;
     }
+
+    function transferOwnership(address newOwner) external OnlyOwner {
+        require(newOwner != address(0), "Invalid address");
+        contractOwner = newOwner;
+    }
     /**
      * @dev Function for adding a new room
      * @param _roomName The name of the room.
