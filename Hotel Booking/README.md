@@ -12,7 +12,7 @@ Based on the V1 smart contract, some potential security vulnerabilities and to b
 
 5. **Front-Running on Timestamp-based Modifiers**: The modifiers that rely on `block.timestamp`, such as `AgreementTimeLeft`, `AgreementTimesUp`, and `RentTimesUp`, could be susceptible to front-running attacks. Consider using block numbers or more secure timestamp verification mechanisms. Done.
 
-6. **Lack of Error Handling in Transfer Functions**: The contract uses `transfer` to send ether, which may revert the entire transaction if the transfer fails. Consider using `send` or `call` and implementing appropriate error handling to avoid potential denial of service (DoS) vulnerabilities.
+6. **Lack of Error Handling in Transfer Functions**: The contract uses `transfer` to send ether, which may revert the entire transaction if the transfer fails. Consider using `send` or `call` and implementing appropriate error handling to avoid potential denial of service (DoS) vulnerabilities. Done.
 
 7. **No Termination Penalty**: The `agreementTerminated` function allows the landlord to terminate an agreement without any penalty for early termination. Consider adding a penalty mechanism to protect the tenant's interests.
 

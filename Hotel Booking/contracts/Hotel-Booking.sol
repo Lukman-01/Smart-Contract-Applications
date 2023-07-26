@@ -333,8 +333,8 @@ contract Hotel {
         Rents[rentId] = newRent;
 
         // Transfer the rent amount to the landlord
-        room.landlord.transfer(room.rent_per_month * 1 ether);
-
+        (bool success, ) = room.landlord.call{value: room.rent_per_month * 1 ether}("");
+        require(success, "Rent payment failed");
         // Emit an event to notify the rent payment
         emit RentPaid(
             rentId,
