@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/BlockTimestamp.sol";
 
 /**
  * @title Hotel
@@ -11,6 +12,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
  */
 contract Hotel {
     using SafeMath for uint256;
+    using BlockTimestamp for IBlockTimestamp;
 
     // State variables
     address public contractOwner;
@@ -182,6 +184,10 @@ contract Hotel {
     function transferOwnership(address newOwner) external OnlyOwner {
         require(newOwner != address(0), "Invalid address");
         contractOwner = newOwner;
+    }
+
+    function getCurrentTimestamp() external view returns (uint256) {
+        return block.timestamp.safeUint64();
     }
     /**
      * @dev Function for adding a new room
