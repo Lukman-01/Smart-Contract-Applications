@@ -246,6 +246,8 @@ contract Hotel {
         no_of_agreement++;
         uint agreementId = no_of_agreement;
 
+        require(_lockperiod <= 12960000, "Lock period exceeds the maximum limit"); // 1 month in seconds
+
         // Get the room details
         Room storage room = Rooms[_roomId];
 

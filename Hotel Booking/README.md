@@ -6,7 +6,7 @@ Based on the V1 smart contract, some potential security vulnerabilities and to b
 
 2. **Lack of Ownership Management**: The contract does not have a mechanism for transferring ownership, which could be risky if the landlord's address needs to be changed or updated. Adding a function to transfer ownership to a new address could be useful. Done.
 
-3. **No Limit on Lock Period**: The `signAgreement` function allows tenants to set any value for the `_lockperiod`, which could potentially be abused. Consider adding a maximum limit for the lock period or using a more secure approach to determine the agreement duration.
+3. **No Limit on Lock Period**: The `signAgreement` function allows tenants to set any value for the `_lockperiod`, which could potentially be abused. Consider adding a maximum limit for the lock period or using a more secure approach to determine the agreement duration. Done
 
 4. **Potential Integer Overflow**: There are multiple arithmetic operations in the contract (e.g., incrementing `no_of_rooms`, `no_of_rent`, `no_of_agreement`). If these variables reach their maximum value, an integer overflow may occur, leading to unexpected behavior. It's essential to handle such cases with proper checks and safeguards.
 
