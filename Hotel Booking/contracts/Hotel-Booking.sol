@@ -35,6 +35,7 @@ contract Hotel {
         uint security_deposit;
         uint timestamp;
         bool vacant;
+        bool securityDepositWithdrawn;
         address payable landlord;
         address payable current_tenant;
     }
@@ -408,5 +409,16 @@ contract Hotel {
             room.rent_per_month,
             room.landlord
         );
+    }
+
+    function withdrawSecurityDeposit(uint _roomId) external OnlyTenant(_roomId) {
+        Room storage room = Rooms[_roomId];
+        require(!room.securityDepositWithdrawn, "Security deposit already withdrawn");
+
+        // Transfer the security deposit to the tenant
+        room.current_tenant.transfer(room.security_deposit);
+
+        // Mark the security deposit as withdrawn to prevent multiple withdrawals
+        room.securityDepositWithdrawn = true;
     }
 }
