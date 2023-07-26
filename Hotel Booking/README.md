@@ -8,7 +8,7 @@ Based on the V1 smart contract, some potential security vulnerabilities and to b
 
 3. **No Limit on Lock Period**: The `signAgreement` function allows tenants to set any value for the `_lockperiod`, which could potentially be abused. Consider adding a maximum limit for the lock period or using a more secure approach to determine the agreement duration. Done
 
-4. **Potential Integer Overflow**: There are multiple arithmetic operations in the contract (e.g., incrementing `no_of_rooms`, `no_of_rent`, `no_of_agreement`). If these variables reach their maximum value, an integer overflow may occur, leading to unexpected behavior. It's essential to handle such cases with proper checks and safeguards.
+4. **Potential Integer Overflow**: There are multiple arithmetic operations in the contract (e.g., incrementing `no_of_rooms`, `no_of_rent`, `no_of_agreement`). If these variables reach their maximum value, an integer overflow may occur, leading to unexpected behavior. It's essential to handle such cases with proper checks and safeguards. Done.
 
 5. **Front-Running on Timestamp-based Modifiers**: The modifiers that rely on `block.timestamp`, such as `AgreementTimeLeft`, `AgreementTimesUp`, and `RentTimesUp`, could be susceptible to front-running attacks. Consider using block numbers or more secure timestamp verification mechanisms.
 

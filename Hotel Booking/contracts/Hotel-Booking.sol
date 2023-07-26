@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 /**
  * @title Hotel
  * @dev A simple smart contract for managing hotel rooms and agreements between landlords and tenants.
@@ -8,6 +10,8 @@ pragma solidity ^0.8.9;
  * The contract uses various modifiers to control access and enforce conditions for specific functions.
  */
 contract Hotel {
+    using SafeMath for uint256;
+
     // State variables
     address public contractOwner;
     address payable landlord;
@@ -196,7 +200,7 @@ contract Hotel {
         require(msg.sender != address(0));
 
         // Increment the total number of rooms
-        no_of_rooms++;
+         no_of_rooms = no_of_rooms.add(1);
         uint roomId = no_of_rooms;
 
         // Create a new Room struct instance and initialize its values
@@ -243,7 +247,7 @@ contract Hotel {
         AgreementTimesUp(_roomId)
     {
         // Increment the total number of agreements
-        no_of_agreement++;
+        no_of_agreement = no_of_agreement.add(1);
         uint agreementId = no_of_agreement;
 
         require(_lockperiod <= 12960000, "Lock period exceeds the maximum limit"); // 1 month in seconds
@@ -303,7 +307,7 @@ contract Hotel {
         uint agreementId = room.agreement_id;
 
         // Update the rent counter
-        no_of_rent++;
+        no_of_rent = no_of_rent.add(1);
         uint rentId = no_of_rent;
 
         // Create a new Rent struct instance and initialize its values
