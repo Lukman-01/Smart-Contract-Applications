@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/BlockTimestamp.sol";
 
@@ -11,19 +13,16 @@ import "@openzeppelin/contracts/utils/BlockTimestamp.sol";
  * The contract uses various modifiers to control access and enforce conditions for specific functions.
  */
 contract Hotel {
+    using Address for address payable;
+    using Counters for Counters.Counter;
     using SafeMath for uint256;
     using BlockTimestamp for IBlockTimestamp;
 
     // State variables
     address public contractOwner;
-    address payable landlord;
-    address payable tenant;
-
-    uint public no_of_rooms = 0;
-    uint public no_of_rent = 0;
-    uint public no_of_agreement = 0;
-    uint public terminationPenaltyPercentage = 10;
-    uint public terminationPenalty;
+    Counters.Counter private roomCounter;
+    Counters.Counter private agreementCounter;
+    Counters.Counter private rentCounter;
 
     // Room struct to store room details
     struct Room {
@@ -35,9 +34,9 @@ contract Hotel {
         uint security_deposit;
         uint timestamp;
         bool vacant;
-        bool securityDepositWithdrawn;
         address payable landlord;
         address payable current_tenant;
+        bool securityDepositWithdrawn;
     }
 
     // Mapping to store Room objects by their IDs
@@ -73,15 +72,15 @@ contract Hotel {
         address payable tenant_address;
     }
 
-    modifier OnlyOwner(){
-        require(msg.sender == contractOwner, "You are not the owner of the contract");
-        _;
-    }
-
     // Mapping to store Rent objects by their IDs
     mapping(uint => Rent) public Rents;
 
     // Modifiers to control access and enforce conditions
+    modifier OnlyOwner() {
+        require(msg.sender == contractOwner, "Only the contract owner can call this function");
+        _;
+    }
+
     modifier OnlyLandlord(uint _id) {
         require(msg.sender == Rooms[_id].landlord, "Only landlord can call this function");
         _;
@@ -92,42 +91,43 @@ contract Hotel {
         _;
     }
 
-    modifier NotOccupied(uint _id) {
-        require(Rooms[_id].vacant == true, "This room is occupied");
+    modifier notOccupied(uint _id) {
+        require(Rooms[_id].vacant, "This room is occupied");
         _;
     }
 
     modifier CheckAmount(uint _id) {
-        require(msg.value >= uint(Rooms[_id].rent_per_month * 1 ether), "You have insufficient amount for the rent");
+        require(msg.value >= Rooms[_id].rent_per_month.mul(1 ether), "You have insufficient amount for the rent");
         _;
     }
 
-    modifier EnoughAgreement(uint _id) {
-        require(msg.value >= uint(uint(Rooms[_id].rent_per_month) + uint(Rooms[_id].security_deposit)), "Not enough Agreement fee");
+    modifier enoughAgreement(uint _id) {
+        uint totalAmount = Rooms[_id].rent_per_month.add(Rooms[_id].security_deposit).mul(1 ether);
+        require(msg.value >= totalAmount, "Not enough Agreement fee");
         _;
     }
 
-    modifier SameTenant(uint _id) {
+    modifier sameTenant(uint _id) {
         require(msg.sender == Rooms[_id].current_tenant, "No previous agreement");
         _;
     }
 
     modifier AgreementTimeLeft(uint _id) {
         uint agrId = Rooms[_id].agreement_id;
-        uint time = Agreements[agrId].timestamp + Agreements[agrId].lockperiod;
+        uint time = Agreements[agrId].timestamp.add(Agreements[agrId].lockperiod);
         require(block.timestamp < time, "Agreement ended");
         _;
     }
 
     modifier AgreementTimesUp(uint _id) {
         uint agrId = Rooms[_id].agreement_id;
-        uint time = Agreements[agrId].timestamp + Agreements[agrId].lockperiod;
+        uint time = Agreements[agrId].timestamp.add(Agreements[agrId].lockperiod);
         require(block.timestamp > time, "There is still some time left");
         _;
     }
 
     modifier RentTimesUp(uint _id) {
-        uint time = Rooms[_id].timestamp + 30 days;
+        uint time = Rooms[_id].timestamp.add(30 days);
         require(block.timestamp >= time, "Times Up");
         _;
     }
@@ -180,19 +180,13 @@ contract Hotel {
         address indexed landlord
     );
 
-    constructor (){
+    /**
+     * @dev Constructor sets the contract owner as the deployer.
+     */
+    constructor() {
         contractOwner = msg.sender;
-        terminationPenalty = 0;
     }
 
-    function transferOwnership(address newOwner) external OnlyOwner {
-        require(newOwner != address(0), "Invalid address");
-        contractOwner = newOwner;
-    }
-
-    function getCurrentTimestamp() external view returns (uint256) {
-        return block.timestamp.safeUint64();
-    }
     /**
      * @dev Function for adding a new room
      * @param _roomName The name of the room.
@@ -205,13 +199,10 @@ contract Hotel {
         string memory _roomAddress,
         uint _rentPerMonth,
         uint _securityDeposit
-    ) external OnlyOwner{
-        // Check if the sender address is valid
-        require(msg.sender != address(0));
-
+    ) external OnlyOwner {
         // Increment the total number of rooms
-         no_of_rooms = no_of_rooms.add(1);
-        uint roomId = no_of_rooms;
+        roomCounter.increment();
+        uint roomId = roomCounter.current();
 
         // Create a new Room struct instance and initialize its values
         Room memory newRoom = Room({
@@ -224,7 +215,8 @@ contract Hotel {
             timestamp: block.timestamp, // Set the current timestamp as the room's creation timestamp
             vacant: true, // Set vacant to true since the room is initially available for rent
             landlord: payable(msg.sender), // Set the landlord as the one who adds the room
-            current_tenant: payable(address(0)) // Set the current_tenant to address(0) since there's no tenant initially
+            current_tenant: payable(address(0)), // Set the current_tenant to address(0) since there's no tenant initially
+            securityDepositWithdrawn: false // Set securityDepositWithdrawn to false since the security deposit is not withdrawn yet
         });
 
         // Store the new room in the mapping using its ID as the key
@@ -251,16 +243,14 @@ contract Hotel {
         uint _lockperiod
     ) external payable
         OnlyTenant(_roomId)
-        NotOccupied(_roomId)
+        notOccupied(_roomId)
         CheckAmount(_roomId)
-        EnoughAgreement(_roomId)
+        enoughAgreement(_roomId)
         AgreementTimesUp(_roomId)
     {
         // Increment the total number of agreements
-        no_of_agreement = no_of_agreement.add(1);
-        uint agreementId = no_of_agreement;
-
-        require(_lockperiod <= 12960000, "Lock period exceeds the maximum limit"); // 1 month in seconds
+        agreementCounter.increment();
+        uint agreementId = agreementCounter.current();
 
         // Get the room details
         Room storage room = Rooms[_roomId];
@@ -316,9 +306,9 @@ contract Hotel {
         Room storage room = Rooms[_roomId];
         uint agreementId = room.agreement_id;
 
-        // Update the rent counter
-        no_of_rent = no_of_rent.add(1);
-        uint rentId = no_of_rent;
+        // Increment the rent counter
+        rentCounter.increment();
+        uint rentId = rentCounter.current();
 
         // Create a new Rent struct instance and initialize its values
         Rent memory newRent = Rent(
@@ -337,8 +327,9 @@ contract Hotel {
         Rents[rentId] = newRent;
 
         // Transfer the rent amount to the landlord
-        (bool success, ) = room.landlord.call{value: room.rent_per_month * 1 ether}("");
+        (bool success, ) = room.landlord.call{value: room.rent_per_month.mul(1 ether)}("");
         require(success, "Rent payment failed");
+
         // Emit an event to notify the rent payment
         emit RentPaid(
             rentId,
@@ -381,20 +372,18 @@ contract Hotel {
      * @dev Function for landlords to terminate an agreement for a room
      * @param _roomId The ID of the room to terminate the agreement for.
      */
-
-    // Update the agreementTerminated function to apply the termination penalty
-    function agreementTerminated(uint _roomId) external OnlyLandlord(_roomId) {
+    function agreementTerminated(uint _roomId) external
+        OnlyLandlord(_roomId)
+    {
         // Get the room details
         Room storage room = Rooms[_roomId];
 
-        require(terminationPenalty > 0, "Termination penalty must be greater than zero");
-
         // Calculate the termination penalty based on the security deposit
-        uint terminationPenalty = room.security_deposit.mul(terminationPenaltyPercentage).div(100);
+        uint terminationPenalty = room.security_deposit.mul(10).div(100); // Assuming 10% penalty
 
         // Transfer the termination penalty to the landlord
-        (bool success, ) = landlord.call{value: terminationPenalty}("");
-        require(success, "Transfer failed");
+        (bool success, ) = room.landlord.call{value: terminationPenalty}("");
+        require(success, "Termination penalty transfer failed");
 
         // Set the room as vacant and clear the agreement details
         room.vacant = true;
@@ -411,12 +400,17 @@ contract Hotel {
         );
     }
 
+    /**
+     * @dev Function for the tenant to withdraw their security deposit after the agreement ends successfully.
+     * @param _roomId The ID of the room from which the tenant wants to withdraw their security deposit.
+     */
     function withdrawSecurityDeposit(uint _roomId) external OnlyTenant(_roomId) {
         Room storage room = Rooms[_roomId];
         require(!room.securityDepositWithdrawn, "Security deposit already withdrawn");
 
         // Transfer the security deposit to the tenant
-        room.current_tenant.transfer(room.security_deposit);
+        (bool success, ) = room.current_tenant.call{value: room.security_deposit}("");
+        require(success, "Security deposit withdrawal failed");
 
         // Mark the security deposit as withdrawn to prevent multiple withdrawals
         room.securityDepositWithdrawn = true;
