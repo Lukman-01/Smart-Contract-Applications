@@ -37,6 +37,28 @@ describe("Hotel Contract", function () {
         expect(room.security_deposit).to.equal(200);
         expect(room.landlord).to.equal(owner.address);
     });
+
+    // Test for signing an agreement
+    it("Should sign an agreement", async function () {
+        // Sign an agreement using the 'signAgreement' function
+        const agreementTx = await hotelContract.signAgreement(1, 86400); // 86400 seconds (1 day) lock period
+        // Wait for the transaction to be mined
+        await agreementTx.wait();
+    
+        // Get the agreement details by calling the 'Agreements' mapping
+        const agreement = await hotelContract.Agreements(1);
+    
+        // Check if the agreement details are correct
+        expect(agreement.room_id).to.equal(1);
+        expect(agreement.room_name).to.equal("Room 101");
+        expect(agreement.room_address).to.equal("Address 123");
+        expect(agreement.rent_per_month).to.equal(100);
+        expect(agreement.security_deposit).to.equal(200);
+        expect(agreement.lockperiod).to.equal(86400);
+        expect(agreement.landlord_address).to.equal(owner.address);
+        expect(agreement.tenant_address).to.equal(tenant.address);
+    });
+  
   
   });
   
