@@ -15,7 +15,6 @@ contract Hotel {
     using Address for address payable;
     using Counters for Counters.Counter;
     using SafeMath for uint256;
-    using BlockTimestamp for IBlockTimestamp;
 
     // State variables
     address public contractOwner;
