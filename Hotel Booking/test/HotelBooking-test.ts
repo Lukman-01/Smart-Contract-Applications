@@ -20,6 +20,23 @@ describe("Hotel Contract", function () {
       hotelContract = await deployContract(owner, Hotel);
     });
   
-    // Write your tests here...
+    // Test for adding a new room
+    it("Should add a new room", async function () {
+        // Add a new room using the 'addRoom' function
+        const roomTx = await hotelContract.addRoom("Room 101", "Address 123", 100, 200);
+        // Wait for the transaction to be mined
+        await roomTx.wait();
+    
+        // Get the room details by calling the 'Rooms' mapping
+        const room = await hotelContract.Rooms(1);
+    
+        // Check if the room details are correct
+        expect(room.room_name).to.equal("Room 101");
+        expect(room.room_address).to.equal("Address 123");
+        expect(room.rent_per_month).to.equal(100);
+        expect(room.security_deposit).to.equal(200);
+        expect(room.landlord).to.equal(owner.address);
+    });
+  
   });
   
