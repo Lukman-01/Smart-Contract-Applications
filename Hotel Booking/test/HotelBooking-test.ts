@@ -93,6 +93,22 @@ describe("Hotel Contract", function () {
         expect(room.agreement_id).to.equal(0);
         expect(room.current_tenant).to.equal(ethers.constants.AddressZero);
     });
+    
+    // Test for terminating an agreement
+    it("Should terminate an agreement", async function () {
+        // Terminate the agreement using the 'agreementTerminated' function
+        const agreementTerminateTx = await hotelContract.agreementTerminated(1);
+        // Wait for the transaction to be mined
+        await agreementTerminateTx.wait();
+    
+        // Get the room details by calling the 'Rooms' mapping after the agreement is terminated
+        const room = await hotelContract.Rooms(1);
+    
+        // Check if the room is now vacant and has no active agreement
+        expect(room.vacant).to.be.true;
+        expect(room.agreement_id).to.equal(0);
+        expect(room.current_tenant).to.equal(ethers.constants.AddressZero);
+    });
   
   });
   
