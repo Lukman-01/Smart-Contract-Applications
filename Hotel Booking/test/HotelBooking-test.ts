@@ -58,6 +58,25 @@ describe("Hotel Contract", function () {
         expect(agreement.landlord_address).to.equal(owner.address);
         expect(agreement.tenant_address).to.equal(tenant.address);
     });
+    
+    // Test for paying the rent
+    it("Should pay the rent", async function () {
+        // Pay the rent using the 'payRent' function
+        const rentTx = await hotelContract.payRent(1, { value: ethers.utils.parseEther("100") });
+        // Wait for the transaction to be mined
+        await rentTx.wait();
+    
+        // Get the rent details by calling the 'Rents' mapping
+        const rent = await hotelContract.Rents(1);
+    
+        // Check if the rent details are correct
+        expect(rent.room_id).to.equal(1);
+        expect(rent.room_name).to.equal("Room 101");
+        expect(rent.room_address).to.equal("Address 123");
+        expect(rent.rent_per_month).to.equal(100);
+        expect(rent.landlord_address).to.equal(owner.address);
+        expect(rent.tenant_address).to.equal(tenant.address);
+    });
   
   
   });
