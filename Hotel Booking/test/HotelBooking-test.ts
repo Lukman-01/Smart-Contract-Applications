@@ -109,6 +109,20 @@ describe("Hotel Contract", function () {
         expect(room.agreement_id).to.equal(0);
         expect(room.current_tenant).to.equal(ethers.constants.AddressZero);
     });
+    
+    // Test for withdrawing the security deposit
+    it("Should withdraw the security deposit", async function () {
+        // Withdraw the security deposit using the 'withdrawSecurityDeposit' function
+        const withdrawDepositTx = await hotelContract.withdrawSecurityDeposit(1);
+        // Wait for the transaction to be mined
+        await withdrawDepositTx.wait();
+    
+        // Get the room details by calling the 'Rooms' mapping after the security deposit is withdrawn
+        const room = await hotelContract.Rooms(1);
+    
+        // Check if the security deposit is withdrawn
+        expect(room.securityDepositWithdrawn).to.be.true;
+    });
   
   });
   
