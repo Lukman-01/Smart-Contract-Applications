@@ -472,4 +472,18 @@ contract Hotel {
     function getTotalNumberOfRooms() external view returns (uint) {
         return roomCounter.current();
     }
+
+    /**
+     * @dev Function to get the total number of rooms that are currently rented in the hotel contract.
+     * @return The total number of rented rooms.
+     */
+    function getTotalNumberOfRoomsRented() external view returns (uint) {
+        uint numberOfRentedRooms = 0;
+        for (uint i = 1; i <= roomCounter.current(); i++) {
+            if (!Rooms[i].vacant) {
+                numberOfRentedRooms++;
+            }
+        }
+        return numberOfRentedRooms;
+    }
 }
