@@ -464,4 +464,12 @@ contract Hotel {
         }
         return numberOfVacantRooms;
     }
+
+    /**
+     * @dev Function to get the total number of rooms in the hotel contract.
+     * @return The total number of rooms.
+     */
+    function getTotalNumberOfRooms() external view returns (uint) {
+        return roomCounter.current();
+    }
 }
