@@ -16,6 +16,7 @@
     "mocha": "^10.2.0"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^4.9.3",
     "openzeppelin-solidity": "3.4.2"
   }
 }
