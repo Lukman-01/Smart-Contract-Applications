@@ -1,128 +1,223 @@
-// Import the necessary libraries and dependencies
-const { expect } = require("chai");
-const { ethers, waffle } = require("hardhat");
+import { ethers } from 'hardhat';
+import { Contract, Signer } from 'ethers';
+import { expect } from 'chai';
+import { waffle } from 'hardhat';
+
 const { deployContract } = waffle;
 
-// Describe the test suite for the Hotel contract
-describe("Hotel Contract", function () {
-    // Define variables to hold contract instances and addresses
-    let hotelContract;
-    let owner, landlord, tenant;
-    let RoomAddedEvent, AgreementSignedEvent, RentPaidEvent, AgreementCompletedEvent, AgreementTerminatedEvent;
-  
-    // Deploy the contract before running tests
-    beforeEach(async function () {
-      // Get accounts from ethers provider
-      [owner, landlord, tenant] = await ethers.getSigners();
-  
-      // Compile and deploy the contract
-      const Hotel = await ethers.getContractFactory("Hotel");
-      hotelContract = await deployContract(owner, Hotel);
-    });
-  
-    // Test for adding a new room
-    it("Should add a new room", async function () {
-        // Add a new room using the 'addRoom' function
-        const roomTx = await hotelContract.addRoom("Room 101", "Address 123", 100, 200);
-        // Wait for the transaction to be mined
-        await roomTx.wait();
-    
-        // Get the room details by calling the 'Rooms' mapping
-        const room = await hotelContract.Rooms(1);
-    
-        // Check if the room details are correct
-        expect(room.room_name).to.equal("Room 101");
-        expect(room.room_address).to.equal("Address 123");
-        expect(room.rent_per_month).to.equal(100);
-        expect(room.security_deposit).to.equal(200);
-        expect(room.landlord).to.equal(owner.address);
-    });
+describe('Hotel', function () {
+  let contract: Contract;
+  let owner: Signer;
+  let tenant1: Signer;
+  let tenant2: Signer;
 
-    // Test for signing an agreement
-    it("Should sign an agreement", async function () {
-        // Sign an agreement using the 'signAgreement' function
-        const agreementTx = await hotelContract.signAgreement(1, 86400); // 86400 seconds (1 day) lock period
-        // Wait for the transaction to be mined
-        await agreementTx.wait();
-    
-        // Get the agreement details by calling the 'Agreements' mapping
-        const agreement = await hotelContract.Agreements(1);
-    
-        // Check if the agreement details are correct
-        expect(agreement.room_id).to.equal(1);
-        expect(agreement.room_name).to.equal("Room 101");
-        expect(agreement.room_address).to.equal("Address 123");
-        expect(agreement.rent_per_month).to.equal(100);
-        expect(agreement.security_deposit).to.equal(200);
-        expect(agreement.lockperiod).to.equal(86400);
-        expect(agreement.landlord_address).to.equal(owner.address);
-        expect(agreement.tenant_address).to.equal(tenant.address);
-    });
-    
-    // Test for paying the rent
-    it("Should pay the rent", async function () {
-        // Pay the rent using the 'payRent' function
-        const rentTx = await hotelContract.payRent(1, { value: ethers.utils.parseEther("100") });
-        // Wait for the transaction to be mined
-        await rentTx.wait();
-    
-        // Get the rent details by calling the 'Rents' mapping
-        const rent = await hotelContract.Rents(1);
-    
-        // Check if the rent details are correct
-        expect(rent.room_id).to.equal(1);
-        expect(rent.room_name).to.equal("Room 101");
-        expect(rent.room_address).to.equal("Address 123");
-        expect(rent.rent_per_month).to.equal(100);
-        expect(rent.landlord_address).to.equal(owner.address);
-        expect(rent.tenant_address).to.equal(tenant.address);
-    });
-  
-    // Test for completing an agreement
-    it("Should complete an agreement", async function () {
-        // Complete the agreement using the 'agreementCompleted' function
-        const agreementCompleteTx = await hotelContract.agreementCompleted(1);
-        // Wait for the transaction to be mined
-        await agreementCompleteTx.wait();
-    
-        // Get the room details by calling the 'Rooms' mapping after the agreement is completed
-        const room = await hotelContract.Rooms(1);
-    
-        // Check if the room is now vacant and has no active agreement
-        expect(room.vacant).to.be.true;
-        expect(room.agreement_id).to.equal(0);
-        expect(room.current_tenant).to.equal(ethers.constants.AddressZero);
-    });
-    
-    // Test for terminating an agreement
-    it("Should terminate an agreement", async function () {
-        // Terminate the agreement using the 'agreementTerminated' function
-        const agreementTerminateTx = await hotelContract.agreementTerminated(1);
-        // Wait for the transaction to be mined
-        await agreementTerminateTx.wait();
-    
-        // Get the room details by calling the 'Rooms' mapping after the agreement is terminated
-        const room = await hotelContract.Rooms(1);
-    
-        // Check if the room is now vacant and has no active agreement
-        expect(room.vacant).to.be.true;
-        expect(room.agreement_id).to.equal(0);
-        expect(room.current_tenant).to.equal(ethers.constants.AddressZero);
-    });
-    
-    // Test for withdrawing the security deposit
-    it("Should withdraw the security deposit", async function () {
-        // Withdraw the security deposit using the 'withdrawSecurityDeposit' function
-        const withdrawDepositTx = await hotelContract.withdrawSecurityDeposit(1);
-        // Wait for the transaction to be mined
-        await withdrawDepositTx.wait();
-    
-        // Get the room details by calling the 'Rooms' mapping after the security deposit is withdrawn
-        const room = await hotelContract.Rooms(1);
-    
-        // Check if the security deposit is withdrawn
-        expect(room.securityDepositWithdrawn).to.be.true;
-    });
-  
+  beforeEach(async () => {
+    // Deploy the Hotel contract
+    [owner, tenant1, tenant2] = await ethers.getSigners();
+    contract = await deployContract(owner, artifacts.readArtifactSync('Hotel'));
   });
-  
+
+  // Test case for adding a new room
+  it('should add a new room', async function () {
+    // Arrange
+    const roomName = 'Room 101';
+    const roomAddress = '123 Main St';
+    const rentPerMonth = 1000;
+    const securityDeposit = 2000;
+
+    // Act
+    const addRoomTx = await contract.addRoom(roomName, roomAddress, rentPerMonth, securityDeposit);
+
+    // Assert
+    expect(addRoomTx)
+      .to.emit(contract, 'RoomAdded')
+      .withArgs(1, roomName, roomAddress, rentPerMonth, securityDeposit, await owner.getAddress());
+
+    // Check if the room details are stored correctly
+    const roomDetails = await contract.Rooms(1);
+    expect(roomDetails.room_id).to.equal(1);
+    expect(roomDetails.room_name).to.equal(roomName);
+    expect(roomDetails.room_address).to.equal(roomAddress);
+    expect(roomDetails.rent_per_month).to.equal(rentPerMonth);
+    expect(roomDetails.security_deposit).to.equal(securityDeposit);
+    expect(roomDetails.vacant).to.be.true;
+    expect(roomDetails.landlord).to.equal(await owner.getAddress());
+    expect(roomDetails.current_tenant).to.equal('0x0000000000000000000000000000000000000000');
+  });
+
+  // Test case for a tenant signing an agreement and renting a room
+  it('should allow a tenant to sign an agreement and rent a room', async function () {
+    // Arrange
+    const roomName = 'Room 101';
+    const roomAddress = '123 Main St';
+    const rentPerMonth = 1000;
+    const securityDeposit = 2000;
+    await contract.addRoom(roomName, roomAddress, rentPerMonth, securityDeposit);
+
+    // Act
+    const signAgreementTx = await contract.connect(tenant1).signAgreement(1, { value: rentPerMonth + securityDeposit });
+
+    // Assert
+    expect(signAgreementTx)
+      .to.emit(contract, 'AgreementSigned')
+      .withArgs(1, 1, roomName, roomAddress, rentPerMonth, securityDeposit, await owner.getAddress(), await tenant1.getAddress());
+
+    // Check if the room details are updated correctly
+    const roomDetails = await contract.Rooms(1);
+    expect(roomDetails.agreement_id).to.equal(1);
+    expect(roomDetails.current_tenant).to.equal(await tenant1.getAddress());
+    expect(roomDetails.vacant).to.be.false;
+    expect(roomDetails.timestamp).to.be.closeTo(Math.floor(Date.now() / 1000), 2);
+  });
+
+  // Test case for a tenant paying rent
+  it('should allow a tenant to pay rent', async function () {
+    // Arrange
+    const roomName = 'Room 101';
+    const roomAddress = '123 Main St';
+    const rentPerMonth = 1000;
+    const securityDeposit = 2000;
+    await contract.addRoom(roomName, roomAddress, rentPerMonth, securityDeposit);
+    await contract.connect(tenant1).signAgreement(1, { value: rentPerMonth + securityDeposit });
+
+    // Act
+    const payRentTx = await contract.connect(tenant1).payRent(1, { value: rentPerMonth });
+
+    // Assert
+    expect(payRentTx)
+      .to.emit(contract, 'RentPaid')
+      .withArgs(1, 1, roomName, roomAddress, rentPerMonth, await owner.getAddress(), await tenant1.getAddress());
+  });
+
+  // Test case for a landlord marking the completion of an agreement
+  it('should allow a landlord to mark the completion of an agreement', async function () {
+    // Arrange
+    const roomName = 'Room 101';
+    const roomAddress = '123 Main St';
+    const rentPerMonth = 1000;
+    const securityDeposit = 2000;
+    await contract.addRoom(roomName, roomAddress, rentPerMonth, securityDeposit);
+    await contract.connect(tenant1).signAgreement(1, { value: rentPerMonth + securityDeposit });
+
+    // Act
+    const agreementCompletedTx = await contract.connect(owner).agreementCompleted(1);
+
+    // Assert
+    expect(agreementCompletedTx)
+      .to.emit(contract, 'AgreementCompleted')
+      .withArgs(1, roomName, roomAddress, rentPerMonth, await owner.getAddress());
+
+    // Check if the room details are updated correctly
+    const roomDetails = await contract.Rooms(1);
+    expect(roomDetails.agreement_id).to.equal(0);
+    expect(roomDetails.current_tenant).to.equal('0x0000000000000000000000000000000000000000');
+    expect(roomDetails.vacant).to.be.true;
+  });
+
+  // Test case for a landlord terminating an agreement
+  it('should allow a landlord to terminate an agreement', async function () {
+    // Arrange
+    const roomName = 'Room 101';
+    const roomAddress = '123 Main St';
+    const rentPerMonth = 1000;
+    const securityDeposit = 2000;
+    await contract.addRoom(roomName, roomAddress, rentPerMonth, securityDeposit);
+    await contract.connect(tenant1).signAgreement(1, { value: rentPerMonth + securityDeposit });
+
+    // Act
+    const agreementTerminatedTx = await contract.connect(owner).agreementTerminated(1);
+
+    // Assert
+    expect(agreementTerminatedTx)
+      .to.emit(contract, 'AgreementTerminated')
+      .withArgs(1, roomName, roomAddress, rentPerMonth, await owner.getAddress());
+
+    // Check if the room details are updated correctly
+    const roomDetails = await contract.Rooms(1);
+    expect(roomDetails.agreement_id).to.equal(0);
+    expect(roomDetails.current_tenant).to.equal('0x0000000000000000000000000000000000000000');
+    expect(roomDetails.vacant).to.be.true;
+  });
+
+  // Test case for a tenant withdrawing their security deposit
+  it('should allow a tenant to withdraw their security deposit', async function () {
+    // Arrange
+    const roomName = 'Room 101';
+    const roomAddress = '123 Main St';
+    const rentPerMonth = 1000;
+    const securityDeposit = 2000;
+    await contract.addRoom(roomName, roomAddress, rentPerMonth, securityDeposit);
+    await contract.connect(tenant1).signAgreement(1, { value: rentPerMonth + securityDeposit });
+
+    // Act
+    await contract.connect(tenant1).withdrawSecurityDeposit(1);
+
+    // Check if the security deposit is withdrawn correctly
+    const roomDetails = await contract.Rooms(1);
+    expect(roomDetails.securityDepositWithdrawn).to.be.true;
+  });
+
+  // Test case for getting the number of vacant rooms
+  it('should get the number of vacant rooms', async function () {
+    // Arrange
+    const roomName1 = 'Room 101';
+    const roomAddress1 = '123 Main St';
+    const rentPerMonth1 = 1000;
+    const securityDeposit1 = 2000;
+    const roomName2 = 'Room 102';
+    const roomAddress2 = '456 Park Ave';
+    const rentPerMonth2 = 1200;
+    const securityDeposit2 = 2500;
+    await contract.addRoom(roomName1, roomAddress1, rentPerMonth1, securityDeposit1);
+    await contract.addRoom(roomName2, roomAddress2, rentPerMonth2, securityDeposit2);
+
+    // Act
+    const vacantRooms = await contract.getNumberOfRoomsAvailable();
+
+    // Assert
+    expect(vacantRooms).to.equal(2);
+  });
+
+  // Test case for getting the total number of rooms
+  it('should get the total number of rooms', async function () {
+    // Arrange
+    const roomName1 = 'Room 101';
+    const roomAddress1 = '123 Main St';
+    const rentPerMonth1 = 1000;
+    const securityDeposit1 = 2000;
+    const roomName2 = 'Room 102';
+    const roomAddress2 = '456 Park Ave';
+    const rentPerMonth2 = 1200;
+    const securityDeposit2 = 2500;
+    await contract.addRoom(roomName1, roomAddress1, rentPerMonth1, securityDeposit1);
+    await contract.addRoom(roomName2, roomAddress2, rentPerMonth2, securityDeposit2);
+
+    // Act
+    const totalRooms = await contract.getTotalNumberOfRooms();
+
+    // Assert
+    expect(totalRooms).to.equal(2);
+  });
+
+  // Test case for getting the total number of rented rooms
+  it('should get the total number of rented rooms', async function () {
+    // Arrange
+    const roomName1 = 'Room 101';
+    const roomAddress1 = '123 Main St';
+    const rentPerMonth1 = 1000;
+    const securityDeposit1 = 2000;
+    const roomName2 = 'Room 102';
+    const roomAddress2 = '456 Park Ave';
+    const rentPerMonth2 = 1200;
+    const securityDeposit2 = 2500;
+    await contract.addRoom(roomName1, roomAddress1, rentPerMonth1, securityDeposit1);
+    await contract.addRoom(roomName2, roomAddress2, rentPerMonth2, securityDeposit2);
+    await contract.connect(tenant1).signAgreement(1, { value: rentPerMonth1 + securityDeposit1 });
+
+    // Act
+    const rentedRooms = await contract.getTotalNumberOfRoomsRented();
+
+    // Assert
+    expect(rentedRooms).to.equal(1);
+  });
+});
