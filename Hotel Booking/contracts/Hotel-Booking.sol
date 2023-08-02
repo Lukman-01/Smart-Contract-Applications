@@ -450,4 +450,18 @@ contract Hotel {
 
         room.securityDepositWithdrawn = true;
     }
+
+    /**
+     * @dev Function to get the number of vacant rooms in the hotel contract.
+     * @return The number of vacant rooms.
+     */
+    function getNumberOfRoomsAvailable() external view returns (uint) {
+        uint numberOfVacantRooms = 0;
+        for (uint i = 1; i <= roomCounter.current(); i++) {
+            if (Rooms[i].vacant) {
+                numberOfVacantRooms++;
+            }
+        }
+        return numberOfVacantRooms;
+    }
 }
