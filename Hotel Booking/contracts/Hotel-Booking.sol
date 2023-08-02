@@ -7,22 +7,19 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
  * @title Hotel
- * @dev A simple smart contract for managing hotel rooms and agreements between landlords and tenants.
- * It allows landlords to add rooms, tenants to sign agreements, pay rent, and mark agreements as completed or terminated.
- * The contract uses various modifiers to control access and enforce conditions for specific functions.
+ * @dev A smart contract to manage hotel rooms, agreements, and rent payments.
  */
 contract Hotel {
     using Address for address payable;
     using Counters for Counters.Counter;
     using SafeMath for uint256;
 
-    // State variables
-    address public contractOwner;
-    Counters.Counter private roomCounter;
-    Counters.Counter private agreementCounter;
-    Counters.Counter private rentCounter;
+    address public contractOwner; // Address of the contract owner
+    Counters.Counter private roomCounter; // Counter for room IDs
+    Counters.Counter private agreementCounter; // Counter for agreement IDs
+    Counters.Counter private rentCounter; // Counter for rent IDs
 
-    // Room struct to store room details
+    // Struct to represent a room
     struct Room {
         uint room_id;
         uint agreement_id;
@@ -37,10 +34,10 @@ contract Hotel {
         bool securityDepositWithdrawn;
     }
 
-    // Mapping to store Room objects by their IDs
+    // Mapping to store rooms using their room_id
     mapping(uint => Room) public Rooms;
 
-    // RoomAgreement struct to store agreement details
+    // Struct to represent an agreement for a room
     struct RoomAgreement {
         uint room_id;
         uint agreement_id;
@@ -48,16 +45,15 @@ contract Hotel {
         string room_address;
         uint rent_per_month;
         uint security_deposit;
-        uint lockperiod;
         uint timestamp;
         address payable landlord_address;
         address payable tenant_address;
     }
 
-    // Mapping to store RoomAgreement objects by their IDs
+    // Mapping to store room agreements using their agreement_id
     mapping(uint => RoomAgreement) public Agreements;
 
-    // Rent struct to store rent payment details
+    // Struct to represent rent payment
     struct Rent {
         uint rent_id;
         uint room_id;
@@ -70,67 +66,100 @@ contract Hotel {
         address payable tenant_address;
     }
 
-    // Mapping to store Rent objects by their IDs
+    // Mapping to store rent payments using their rent_id
     mapping(uint => Rent) public Rents;
 
-    // Modifiers to control access and enforce conditions
+    /**
+     * @dev Modifier to check if the caller is the contract owner.
+     */
     modifier OnlyOwner() {
         require(msg.sender == contractOwner, "Only the contract owner can call this function");
         _;
     }
 
+    /**
+     * @dev Modifier to check if the caller is the landlord of a specific room.
+     * @param _id The ID of the room to check.
+     */
     modifier OnlyLandlord(uint _id) {
         require(msg.sender == Rooms[_id].landlord, "Only landlord can call this function");
         _;
     }
 
+    /**
+     * @dev Modifier to check if the caller is the current tenant of a specific room.
+     * @param _id The ID of the room to check.
+     */
     modifier OnlyTenant(uint _id) {
         require(msg.sender == Rooms[_id].current_tenant, "Only tenants can call this function");
         _;
     }
 
+    /**
+     * @dev Modifier to check if a room is not occupied (vacant).
+     * @param _id The ID of the room to check.
+     */
     modifier notOccupied(uint _id) {
         require(Rooms[_id].vacant, "This room is occupied");
         _;
     }
 
+    /**
+     * @dev Modifier to check if the sent amount is sufficient for the rent payment.
+     * @param _id The ID of the room to check.
+     */
     modifier CheckAmount(uint _id) {
         require(msg.value >= Rooms[_id].rent_per_month.mul(1 ether), "You have insufficient amount for the rent");
         _;
     }
 
+    /**
+     * @dev Modifier to check if the sent amount is enough for an agreement.
+     * @param _id The ID of the room to check.
+     */
     modifier enoughAgreement(uint _id) {
         uint totalAmount = Rooms[_id].rent_per_month.add(Rooms[_id].security_deposit).mul(1 ether);
         require(msg.value >= totalAmount, "Not enough Agreement fee");
         _;
     }
 
+    /**
+     * @dev Modifier to check if the caller is the same tenant as the previous agreement.
+     * @param _id The ID of the room to check.
+     */
     modifier sameTenant(uint _id) {
         require(msg.sender == Rooms[_id].current_tenant, "No previous agreement");
         _;
     }
 
+    /**
+     * @dev Modifier to check if the agreement for a room is still valid (time left).
+     * @param _id The ID of the room to check.
+     */
     modifier AgreementTimeLeft(uint _id) {
-        uint agrId = Rooms[_id].agreement_id;
-        uint time = Agreements[agrId].timestamp.add(Agreements[agrId].lockperiod);
-        require(block.timestamp < time, "Agreement ended");
+        require(Agreements[Rooms[_id].agreement_id].timestamp > 0, "Agreement ended");
         _;
     }
 
-    modifier AgreementTimesUp(uint _id) {
-        uint agrId = Rooms[_id].agreement_id;
-        uint time = Agreements[agrId].timestamp.add(Agreements[agrId].lockperiod);
-        require(block.timestamp > time, "There is still some time left");
-        _;
-    }
-
+    /**
+     * @dev Modifier to check if the rent payment is overdue (30 days after the last payment).
+     * @param _id The ID of the room to check.
+     */
     modifier RentTimesUp(uint _id) {
         uint time = Rooms[_id].timestamp.add(30 days);
         require(block.timestamp >= time, "Times Up");
         _;
     }
 
-    // Events for notifying external systems
+    /**
+     * @dev Event to emit when a new room is added.
+     * @param roomId The ID of the newly added room.
+     * @param room_name The name of the room.
+     * @param room_address The address of the room.
+     * @param rent_per_month The monthly rent for the room.
+     * @param security_deposit The security deposit required for the room.
+     * @param landlord The address of the room's landlord.
+     */
     event RoomAdded(
         uint indexed roomId,
         string room_name,
@@ -140,6 +169,17 @@ contract Hotel {
         address landlord
     );
 
+    /**
+     * @dev Event to emit when an agreement is signed for a room.
+     * @param agreementId The ID of the newly signed agreement.
+     * @param roomId The ID of the room for which the agreement is signed.
+     * @param room_name The name of the room.
+     * @param room_address The address of the room.
+     * @param rent_per_month The monthly rent for the room.
+     * @param security_deposit The security deposit required for the room.
+     * @param landlord The address of the room's landlord.
+     * @param tenant The address of the tenant who signed the agreement.
+     */
     event AgreementSigned(
         uint indexed agreementId,
         uint roomId,
@@ -147,11 +187,20 @@ contract Hotel {
         string room_address,
         uint rent_per_month,
         uint security_deposit,
-        uint lockperiod,
         address landlord,
         address tenant
     );
 
+    /**
+     * @dev Event to emit when a rent payment is made.
+     * @param rentId The ID of the rent payment.
+     * @param roomId The ID of the room for which the rent is paid.
+     * @param room_name The name of the room.
+     * @param room_address The address of the room.
+     * @param rent_per_month The monthly rent for the room.
+     * @param landlord The address of the room's landlord.
+     * @param tenant The address of the tenant who paid the rent.
+     */
     event RentPaid(
         uint rentId,
         uint indexed roomId,
@@ -162,6 +211,14 @@ contract Hotel {
         address indexed tenant
     );
 
+    /**
+     * @dev Event to emit when an agreement is completed.
+     * @param roomId The ID of the room for which the agreement is completed.
+     * @param room_name The name of the room.
+     * @param room_address The address of the room.
+     * @param rent_per_month The monthly rent for the room.
+     * @param landlord The address of the room's landlord.
+     */
     event AgreementCompleted(
         uint indexed roomId,
         string room_name,
@@ -170,6 +227,14 @@ contract Hotel {
         address indexed landlord
     );
 
+    /**
+     * @dev Event to emit when an agreement is terminated.
+     * @param roomId The ID of the room for which the agreement is terminated.
+     * @param room_name The name of the room.
+     * @param room_address The address of the room.
+     * @param rent_per_month The monthly rent for the room.
+     * @param landlord The address of the room's landlord.
+     */
     event AgreementTerminated(
         uint indexed roomId,
         string room_name,
@@ -179,18 +244,20 @@ contract Hotel {
     );
 
     /**
-     * @dev Constructor sets the contract owner as the deployer.
+     * @dev Contract constructor.
+     * Initializes the contract owner.
      */
     constructor() {
         contractOwner = msg.sender;
     }
 
     /**
-     * @dev Function for adding a new room
+     * @dev Function to add a new room to the contract.
+     * Only the contract owner can call this function.
      * @param _roomName The name of the room.
      * @param _roomAddress The address of the room.
-     * @param _rentPerMonth The monthly rent amount for the room.
-     * @param _securityDeposit The security deposit amount for the room.
+     * @param _rentPerMonth The monthly rent for the room.
+     * @param _securityDeposit The security deposit required for the room.
      */
     function addRoom(
         string memory _roomName,
@@ -198,29 +265,25 @@ contract Hotel {
         uint _rentPerMonth,
         uint _securityDeposit
     ) external OnlyOwner {
-        // Increment the total number of rooms
         roomCounter.increment();
         uint roomId = roomCounter.current();
 
-        // Create a new Room struct instance and initialize its values
         Room memory newRoom = Room({
             room_id: roomId,
-            agreement_id: 0, // Initialize agreement_id to 0 since it's a new room and has no agreement yet
+            agreement_id: 0,
             room_name: _roomName,
             room_address: _roomAddress,
             rent_per_month: _rentPerMonth,
             security_deposit: _securityDeposit,
-            timestamp: block.timestamp, // Set the current timestamp as the room's creation timestamp
-            vacant: true, // Set vacant to true since the room is initially available for rent
-            landlord: payable(msg.sender), // Set the landlord as the one who adds the room
-            current_tenant: payable(address(0)), // Set the current_tenant to address(0) since there's no tenant initially
-            securityDepositWithdrawn: false // Set securityDepositWithdrawn to false since the security deposit is not withdrawn yet
+            timestamp: block.timestamp,
+            vacant: true,
+            landlord: payable(msg.sender),
+            current_tenant: payable(address(0)),
+            securityDepositWithdrawn: false
         });
 
-        // Store the new room in the mapping using its ID as the key
         Rooms[roomId] = newRoom;
 
-        // Emit an event to notify the addition of a new room
         emit RoomAdded(
             roomId,
             _roomName,
@@ -232,51 +295,41 @@ contract Hotel {
     }
 
     /**
-     * @dev Function for tenants to sign an agreement for a room
-     * @param _roomId The ID of the room to sign the agreement for.
-     * @param _lockperiod The duration of the agreement lock period in seconds.
+     * @dev Function for a tenant to sign an agreement and rent a room.
+     * Only tenants can call this function.
+     * @param _roomId The ID of the room to be rented.
      */
-    function signAgreement(
-        uint _roomId,
-        uint _lockperiod
-    ) external payable
+    function signAgreement(uint _roomId) external payable
         OnlyTenant(_roomId)
         notOccupied(_roomId)
         CheckAmount(_roomId)
         enoughAgreement(_roomId)
-        AgreementTimesUp(_roomId)
+        AgreementTimeLeft(_roomId)
     {
-        // Increment the total number of agreements
         agreementCounter.increment();
         uint agreementId = agreementCounter.current();
 
-        // Get the room details
         Room storage room = Rooms[_roomId];
 
-        // Create a new RoomAgreement struct instance and initialize its values
-        RoomAgreement memory newAgreement = RoomAgreement(
-            _roomId,
-            agreementId,
-            room.room_name,
-            room.room_address,
-            room.rent_per_month,
-            room.security_deposit,
-            _lockperiod,
-            block.timestamp, // Set the current timestamp as the agreement's creation timestamp
-            room.landlord,
-            payable(msg.sender) // Set the tenant as the one who signs the agreement
-        );
+        RoomAgreement memory newAgreement = RoomAgreement({
+            room_id: _roomId,
+            agreement_id: agreementId,
+            room_name: room.room_name,
+            room_address: room.room_address,
+            rent_per_month: room.rent_per_month,
+            security_deposit: room.security_deposit,
+            timestamp: block.timestamp,
+            landlord_address: room.landlord,
+            tenant_address: payable(msg.sender)
+        });
 
-        // Store the new agreement in the Agreements mapping using its ID as the key
         Agreements[agreementId] = newAgreement;
 
-        // Update the room's agreement_id and current_tenant fields
         room.agreement_id = agreementId;
         room.current_tenant = payable(msg.sender);
-        room.vacant = false; // Set the room as occupied
+        room.vacant = false;
         room.timestamp = block.timestamp;
 
-        // Emit an event to notify the signing of the agreement
         emit AgreementSigned(
             agreementId,
             _roomId,
@@ -284,51 +337,44 @@ contract Hotel {
             room.room_address,
             room.rent_per_month,
             room.security_deposit,
-            _lockperiod,
             room.landlord,
             msg.sender
         );
     }
 
     /**
-     * @dev Function for tenants to pay rent for a room
-     * @param _roomId The ID of the room to pay rent for.
+     * @dev Function for a tenant to pay rent for a room.
+     * Only tenants can call this function.
+     * @param _roomId The ID of the room for which the rent is paid.
      */
     function payRent(uint _roomId) external payable
         OnlyTenant(_roomId)
-        AgreementTimeLeft(_roomId)
         RentTimesUp(_roomId)
         CheckAmount(_roomId)
     {
-        // Get the room details
         Room storage room = Rooms[_roomId];
         uint agreementId = room.agreement_id;
 
-        // Increment the rent counter
         rentCounter.increment();
         uint rentId = rentCounter.current();
 
-        // Create a new Rent struct instance and initialize its values
-        Rent memory newRent = Rent(
-            rentId,
-            _roomId,
-            agreementId,
-            room.room_name,
-            room.room_address,
-            room.rent_per_month,
-            block.timestamp, // Set the current timestamp as the rent payment timestamp
-            room.landlord,
-            room.current_tenant
-        );
+        Rent memory newRent = Rent({
+            rent_id: rentId,
+            room_id: _roomId,
+            agreement_id: agreementId,
+            room_name: room.room_name,
+            room_address: room.room_address,
+            rent_per_month: room.rent_per_month,
+            timestamp: block.timestamp,
+            landlord_address: room.landlord,
+            tenant_address: room.current_tenant
+        });
 
-        // Store the new rent payment in the Rents mapping using its ID as the key
         Rents[rentId] = newRent;
 
-        // Transfer the rent amount to the landlord
         (bool success, ) = room.landlord.call{value: room.rent_per_month.mul(1 ether)}("");
         require(success, "Rent payment failed");
 
-        // Emit an event to notify the rent payment
         emit RentPaid(
             rentId,
             _roomId,
@@ -341,22 +387,19 @@ contract Hotel {
     }
 
     /**
-     * @dev Function for landlords to mark an agreement as completed for a room
-     * @param _roomId The ID of the room to mark the agreement as completed for.
+     * @dev Function for a landlord to mark the completion of an agreement.
+     * Only landlords can call this function.
+     * @param _roomId The ID of the room for which the agreement is completed.
      */
     function agreementCompleted(uint _roomId) external
         OnlyLandlord(_roomId)
-        AgreementTimeLeft(_roomId)
     {
-        // Get the room details
         Room storage room = Rooms[_roomId];
 
-        // Set the room as vacant and clear the agreement details
         room.vacant = true;
         room.agreement_id = 0;
         room.current_tenant = payable(address(0));
 
-        // Emit an event to notify the completion of the agreement
         emit AgreementCompleted(
             _roomId,
             room.room_name,
@@ -367,28 +410,23 @@ contract Hotel {
     }
 
     /**
-     * @dev Function for landlords to terminate an agreement for a room
-     * @param _roomId The ID of the room to terminate the agreement for.
+     * @dev Function for a landlord to terminate an agreement.
+     * Only landlords can call this function.
+     * @param _roomId The ID of the room for which the agreement is terminated.
      */
     function agreementTerminated(uint _roomId) external
         OnlyLandlord(_roomId)
     {
-        // Get the room details
         Room storage room = Rooms[_roomId];
 
-        // Calculate the termination penalty based on the security deposit
-        uint terminationPenalty = room.security_deposit.mul(10).div(100); // Assuming 10% penalty
-
-        // Transfer the termination penalty to the landlord
+        uint terminationPenalty = room.security_deposit.mul(10).div(100);
         (bool success, ) = room.landlord.call{value: terminationPenalty}("");
         require(success, "Termination penalty transfer failed");
 
-        // Set the room as vacant and clear the agreement details
         room.vacant = true;
         room.agreement_id = 0;
         room.current_tenant = payable(address(0));
 
-        // Emit an event to notify the termination of the agreement
         emit AgreementTerminated(
             _roomId,
             room.room_name,
@@ -399,18 +437,17 @@ contract Hotel {
     }
 
     /**
-     * @dev Function for the tenant to withdraw their security deposit after the agreement ends successfully.
-     * @param _roomId The ID of the room from which the tenant wants to withdraw their security deposit.
+     * @dev Function for a tenant to withdraw their security deposit after the agreement ends.
+     * Only tenants can call this function.
+     * @param _roomId The ID of the room for which the security deposit is withdrawn.
      */
     function withdrawSecurityDeposit(uint _roomId) external OnlyTenant(_roomId) {
         Room storage room = Rooms[_roomId];
         require(!room.securityDepositWithdrawn, "Security deposit already withdrawn");
 
-        // Transfer the security deposit to the tenant
         (bool success, ) = room.current_tenant.call{value: room.security_deposit}("");
         require(success, "Security deposit withdrawal failed");
 
-        // Mark the security deposit as withdrawn to prevent multiple withdrawals
         room.securityDepositWithdrawn = true;
     }
 }
