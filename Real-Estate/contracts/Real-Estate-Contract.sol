@@ -68,6 +68,6 @@ contract RealEstate {
 
         payable(previousOwner).transfer(property.price);
 
-        emit PropertySold(_id);
+        emit PropertySold(indexed _id);
     }
 }
