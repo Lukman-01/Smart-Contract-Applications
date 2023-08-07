@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract RealEstate {
     using SafeMath for uint256;
 
-    struct Property{
+    struct Property {
         uint price;
         address owner;
         bool forSale;
@@ -16,39 +16,41 @@ contract RealEstate {
     }
 
     mapping(uint => Property) public properties;
-
     uint[] public propertyIds;
 
     event PropertySold(uint propertyId);
 
-    function listPropertyForSale(uint _id, uint _price, string memory _name, string memory _description, string memory
-    _location) public {
-
+    function listPropertyForSale(
+        uint _id,
+        uint _price,
+        string memory _name,
+        string memory _description,
+        string memory _location
+    ) public {
         Property memory newProperty = Property({
             price: _price,
             owner: msg.sender,
             forSale: true,
-            name: -_name,
+            name: _name,
             description: _description,
             location: _location
-        })
+        });
 
         properties[_id] = newProperty;
-        propertyIds.push[_id];
-
+        propertyIds.push(_id);
     }
 
-    function buyProperty(uint _id) public payable{
+    function buyProperty(uint _id) public payable {
+        Property storage property = properties[_id];
 
-        Property storage property = propertyIds[_id];
+        require(property.forSale, "Property not for sale");
+        require(property.price <= msg.value, "Insufficient funds");
 
-        require (property.forSale, "property not for sale");
-        require (property.price <= msg.value, "Insuficient fund");
-
+        address previousOwner = property.owner;
         property.owner = msg.sender;
         property.forSale = false;
 
-        payable(property.owner).transfer(property.price);
+        payable(previousOwner).transfer(property.price);
 
         emit PropertySold(_id);
     }
