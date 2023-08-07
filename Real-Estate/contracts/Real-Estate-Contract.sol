@@ -15,5 +15,11 @@ contract RealEstate {
         string location;
     }
 
+    mapping(uint => Property) public properties;
+
+    uint[] public propertyId;
+
+    event PropertySold(uint propertyId);
+
     
 }
