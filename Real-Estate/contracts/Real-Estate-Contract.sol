@@ -38,4 +38,18 @@ contract RealEstate {
 
     }
 
+    function buyProperty(uint _id) public payable{
+
+        Property storage property = propertyIds[_id];
+
+        require (property.forSale, "property not for sale");
+        require (property.price <= msg.value, "Insuficient fund");
+
+        property.owner = msg.sender;
+        property.forSale = false;
+
+        payable(property.owner).transfer(property.price);
+
+        emit PropertySold(_id);
+    }
 }
