@@ -57,7 +57,7 @@ contract RealEstate {
     ) public {
 
         require(properties[_id].owner == address(0), "Property already exists");
-        
+
         Property memory newProperty = Property({
             price: _price,
             owner: msg.sender,
@@ -69,6 +69,8 @@ contract RealEstate {
 
         properties[_id] = newProperty;
         propertyIds.push(_id);
+
+        emit PropertyListed(_id, msg.sender);
     }
 
     /**
