@@ -55,6 +55,9 @@ contract RealEstate {
         string memory _description,
         string memory _location
     ) public {
+
+        require(properties[_id].owner == address(0), "Property already exists");
+        
         Property memory newProperty = Property({
             price: _price,
             owner: msg.sender,
