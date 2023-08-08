@@ -91,4 +91,12 @@ contract RealEstate {
 
         emit PropertySold(_id);
     }
+
+    function withdrawProperty(uint256 _id) public onlyOwner(_id) propertyExists(_id) {
+        Property storage property = properties[_id];
+
+        property.owner = address(0);
+        property.forSale = false;
+
+    }
 }
