@@ -25,6 +25,21 @@ contract RealEstate {
     event PropertyListed(uint256 propertyId, address owner);
     event PropertySold(uint256 propertyId, address oldOwner, address newOwner);
 
+    modifier onlyOwner(uint256 _id) {
+        require(properties[_id].owner == msg.sender, "You are not the owner");
+        _;
+    }
+
+    modifier propertyExists(uint256 _id) {
+        require(properties[_id].owner != address(0), "Property does not exist");
+        _;
+    }
+
+    modifier propertyForSale(uint256 _id) {
+        require(properties[_id].forSale, "Property is not for sale");
+        _;
+    }
+
     /**
      * @dev List a new property for sale.
      * @param _id The unique identifier of the property.
