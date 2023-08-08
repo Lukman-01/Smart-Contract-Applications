@@ -22,7 +22,8 @@ contract RealEstate {
     mapping(uint => Property) public properties;
     uint[] public propertyIds;
 
-    event PropertySold(uint propertyId);
+    event PropertyListed(uint256 propertyId, address owner);
+    event PropertySold(uint256 propertyId, address oldOwner, address newOwner);
 
     /**
      * @dev List a new property for sale.
@@ -68,6 +69,6 @@ contract RealEstate {
 
         payable(previousOwner).transfer(property.price);
 
-        emit PropertySold(indexed _id);
+        emit PropertySold(_id);
     }
 }
