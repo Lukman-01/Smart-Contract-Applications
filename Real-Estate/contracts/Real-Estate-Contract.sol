@@ -96,9 +96,11 @@ contract RealEstate {
         Property storage property = properties[_id];
 
         require(!property.forSale, "Cannot withdraw while property is for sale");
-        
+
         property.owner = address(0);
         property.forSale = false;
+
+        emit PropertySold(_id, property.owner, address(0));
 
     }
 }
