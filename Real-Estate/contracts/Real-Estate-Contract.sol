@@ -95,6 +95,8 @@ contract RealEstate {
     function withdrawProperty(uint256 _id) public onlyOwner(_id) propertyExists(_id) {
         Property storage property = properties[_id];
 
+        require(!property.forSale, "Cannot withdraw while property is for sale");
+        
         property.owner = address(0);
         property.forSale = false;
 
