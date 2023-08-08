@@ -77,7 +77,7 @@ contract RealEstate {
      * @dev Buy a property listed for sale.
      * @param _id The identifier of the property to be bought.
      */
-    function buyProperty(uint _id) public payable {
+    function buyProperty(uint _id) public payable propertyExists(_id) propertyForSale(_id){
         Property storage property = properties[_id];
 
         require(property.forSale, "Property not for sale");
