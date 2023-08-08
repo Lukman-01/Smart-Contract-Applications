@@ -11,16 +11,16 @@ contract RealEstate {
     using SafeMath for uint256;
 
     struct Property {
-        uint price;
-        address owner;
-        bool forSale;
-        string name;
-        string description;
-        string location;
+        uint price;            // Price of the property in Wei (smallest unit of Ether)
+        address owner;         // Address of the current owner of the property
+        bool forSale;          // Indicates whether the property is listed for sale
+        string name;           // Name of the property
+        string description;    // Description of the property
+        string location;       // Location of the property
     }
 
-    mapping(uint => Property) public properties;
-    uint[] public propertyIds;
+    mapping(uint => Property) public properties;  // Mapping to store properties by their unique identifier
+    uint[] public propertyIds;                    // Array to store the list of property identifiers
 
     event PropertyListed(uint256 propertyId, address owner);
     event PropertySold(uint256 propertyId, address oldOwner, address newOwner);
@@ -80,7 +80,6 @@ contract RealEstate {
     function buyProperty(uint _id) public payable propertyExists(_id) propertyForSale(_id){
         Property storage property = properties[_id];
 
-        require(property.forSale, "Property not for sale");
         require(property.price <= msg.value, "Insufficient funds");
 
         address previousOwner = property.owner;
@@ -89,9 +88,13 @@ contract RealEstate {
 
         payable(previousOwner).transfer(property.price);
 
-        emit PropertySold(_id);
+        emit PropertySold(_id, previousOwner, msg.sender);
     }
 
+    /**
+     * @dev Withdraw a property from being listed for sale.
+     * @param _id The identifier of the property to be withdrawn.
+     */
     function withdrawProperty(uint256 _id) public onlyOwner(_id) propertyExists(_id) {
         Property storage property = properties[_id];
 
@@ -101,6 +104,5 @@ contract RealEstate {
         property.forSale = false;
 
         emit PropertySold(_id, property.owner, address(0));
-
     }
 }
