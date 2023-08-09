@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@types/chai": "^4.3.5",
-    "chai": "^4.3.7"
+    "chai": "^4.3.7",
+    "ethers": "^6.7.0"
   }
 }
