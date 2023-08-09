@@ -105,7 +105,5 @@ contract RealEstate {
 
         property.owner = address(0);
         property.forSale = false;
-
-        emit PropertySold(_id, property.owner, address(0));
     }
 }
