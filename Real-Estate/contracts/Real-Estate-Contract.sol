@@ -24,6 +24,7 @@ contract RealEstate {
 
     event PropertyListed(uint256 propertyId, address owner);
     event PropertySold(uint256 propertyId, address oldOwner, address newOwner);
+    event PropertyWithdrawn(uint256 propertyId, address owner);
 
     modifier onlyOwner(uint256 _id) {
         require(properties[_id].owner == msg.sender, "You are not the owner");
@@ -99,6 +100,8 @@ contract RealEstate {
         Property storage property = properties[_id];
 
         require(!property.forSale, "Cannot withdraw while property is for sale");
+
+        emit PropertyWithdrawn(_id, property.owner);
 
         property.owner = address(0);
         property.forSale = false;
