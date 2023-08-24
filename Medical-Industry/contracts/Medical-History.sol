@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-contract MedicalHistory {
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+
+contract MedicalHistory is AccessControl {
+    using Counters for Counters.Counter;
+    Counters.Counter private patientIds;
+
+    bytes32 public constant DOCTOR_ROLE = keccak256("DOCTOR_ROLE");
+
     struct Patient {
         string name;
         uint age;
@@ -9,33 +17,32 @@ contract MedicalHistory {
         string[] allergies;
         string[] medications;
         string[] procedures;
-        uint256 lastUpdated; // Timestamp of the last update
+        uint256 lastUpdated;
     }
 
-    mapping(address => Patient) public Patients;
-    mapping(address => bool) public authorizedDoctors;
+    mapping(uint256 => Patient) public patients;
 
-    modifier onlyAuthorizedDoctor() {
-        require(authorizedDoctors[msg.sender], "Unauthorized doctor");
-        _;
-    }
-
-    constructor(address[] memory _doctors) {
-        for (uint256 i = 0; i < _doctors.length; i++) {
-            authorizedDoctors[_doctors[i]] = true;
+    constructor(address[] memory _initialDoctors) {
+        for (uint256 i = 0; i < _initialDoctors.length; i++) {
+            _setupRole(DOCTOR_ROLE, _initialDoctors[i]);
         }
     }
 
+    modifier onlyDoctor() {
+        require(hasRole(DOCTOR_ROLE, msg.sender), "Restricted to doctors");
+        _;
+    }
+
     function addPatient(
-        address _patientAddress,
         string memory _name,
         uint _age,
         string[] memory _conditions,
         string[] memory _allergies,
         string[] memory _medications,
         string[] memory _procedures
-    ) public onlyAuthorizedDoctor {
-        Patients[_patientAddress] = Patient({
+    ) public onlyDoctor {
+        uint256 patientId = patientIds.current();
+        patients[patientId] = Patient({
             name: _name,
             age: _age,
             conditions: _conditions,
@@ -44,18 +51,19 @@ contract MedicalHistory {
             procedures: _procedures,
             lastUpdated: block.timestamp
         });
+        patientIds.increment();
     }
 
     function updatePatient(
-        address _patientAddress,
+        uint256 _patientId,
         string memory _name,
         uint _age,
         string[] memory _conditions,
         string[] memory _allergies,
         string[] memory _medications,
         string[] memory _procedures
-    ) public onlyAuthorizedDoctor {
-        Patient storage patient = Patients[_patientAddress];
+    ) public onlyDoctor {
+        Patient storage patient = patients[_patientId];
         patient.name = _name;
         patient.age = _age;
         patient.conditions = _conditions;
@@ -65,7 +73,7 @@ contract MedicalHistory {
         patient.lastUpdated = block.timestamp;
     }
 
-    function getPatient(address _patientAddress) public view returns (
+    function getPatient(uint256 _patientId) public view returns (
         string memory _name,
         uint _age,
         string[] memory _conditions,
@@ -74,7 +82,7 @@ contract MedicalHistory {
         string[] memory _procedures,
         uint256 _lastUpdated
     ) {
-        Patient storage patient = Patients[_patientAddress];
+        Patient storage patient = patients[_patientId];
         return (
             patient.name,
             patient.age,
