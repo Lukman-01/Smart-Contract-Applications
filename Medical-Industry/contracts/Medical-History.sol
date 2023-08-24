@@ -49,4 +49,22 @@ contract MedicalHistory {
         patient.procedures = _procedures;
     }
     
+    function getPatient(address _patientAddress) public view returns (
+        string memory _name,
+        uint _age,
+        string[] memory _conditions,
+        string[] memory _allergies,
+        string[] memory _medications,
+        string[] memory _procedures
+    ) {
+        Patient storage patient = Patients[_patientAddress];
+        return (
+            patient.name,
+            patient.age,
+            patient.conditions,
+            patient.allergies,
+            patient.medications,
+            patient.procedures
+        );
+    }
 }
