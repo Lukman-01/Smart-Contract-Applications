@@ -1,9 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+/**
+ * @title MedicalHistory
+ * @dev A smart contract for managing patient medical history.
+ */
 contract MedicalHistory is AccessControl {
     using Counters for Counters.Counter;
     Counters.Counter private patientIds;
@@ -22,6 +26,10 @@ contract MedicalHistory is AccessControl {
 
     mapping(uint256 => Patient) public patients;
 
+    /**
+     * @dev Constructor to initialize the contract with initial authorized doctors.
+     * @param _initialDoctors Addresses of initial authorized doctors.
+     */
     constructor(address[] memory _initialDoctors) {
         for (uint256 i = 0; i < _initialDoctors.length; i++) {
             _setupRole(DOCTOR_ROLE, _initialDoctors[i]);
@@ -33,6 +41,15 @@ contract MedicalHistory is AccessControl {
         _;
     }
 
+    /**
+     * @dev Adds a new patient to the medical history.
+     * @param _name Name of the patient.
+     * @param _age Age of the patient.
+     * @param _conditions List of medical conditions of the patient.
+     * @param _allergies List of allergies of the patient.
+     * @param _medications List of medications prescribed to the patient.
+     * @param _procedures List of medical procedures undergone by the patient.
+     */
     function addPatient(
         string memory _name,
         uint _age,
@@ -54,6 +71,16 @@ contract MedicalHistory is AccessControl {
         patientIds.increment();
     }
 
+    /**
+     * @dev Updates patient information.
+     * @param _patientId Id of the patient to update.
+     * @param _name Updated name of the patient.
+     * @param _age Updated age of the patient.
+     * @param _conditions Updated list of medical conditions.
+     * @param _allergies Updated list of allergies.
+     * @param _medications Updated list of medications.
+     * @param _procedures Updated list of medical procedures.
+     */
     function updatePatient(
         uint256 _patientId,
         string memory _name,
@@ -73,6 +100,17 @@ contract MedicalHistory is AccessControl {
         patient.lastUpdated = block.timestamp;
     }
 
+    /**
+     * @dev Retrieves patient information.
+     * @param _patientId Id of the patient to retrieve information for.
+     * @return _name Name of the patient.
+     * @return _age Age of the patient.
+     * @return _conditions List of medical conditions.
+     * @return _allergies List of allergies.
+     * @return _medications List of medications.
+     * @return _procedures List of medical procedures.
+     * @return _lastUpdated Timestamp of the last update.
+     */
     function getPatient(uint256 _patientId) public view returns (
         string memory _name,
         uint _age,
