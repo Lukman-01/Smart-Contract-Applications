@@ -32,5 +32,13 @@ contract SocioMedia {
         users[_friend].friends.push(msg.sender);
     }
 
+    function deleteAcount() public{
+        delete users[msg.sender];
+    }
+
+    function updateAccount(string memory _name, string memory _bio) public{
+        users[msg.sender].name = _name;
+        users[msg.sender].bio = _bio;  
+    }
     
 }
