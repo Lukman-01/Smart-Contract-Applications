@@ -7,6 +7,7 @@ contract ModernSocialMedia {
         string bio;
         string profilePicture;
         address[] friends;
+        mapping(address => bool) isFriend;
         Post[] posts;
         Message[] messages;
         mapping(address => bool) followers;
@@ -26,6 +27,13 @@ contract ModernSocialMedia {
         uint256 timestamp;
     }
 
+    struct Message {
+        address sender;
+        address recipient;
+        string content;
+        uint256 timestamp;
+    }
+
     mapping(address => User) public users;
 
     event PostCreated(address indexed author, uint256 indexed postId);
@@ -40,6 +48,11 @@ contract ModernSocialMedia {
         _;
     }
 
+    modifier validPost(uint256 _postId) {
+        require(_postId < users[msg.sender].posts.length, "Invalid post ID");
+        _;
+    }
+
     function createUser(string memory _name, string memory _bio, string memory _profilePicture) public {
         require(bytes(_name).length > 0, "Name cannot be empty");
         users[msg.sender] = User(_name, _bio, _profilePicture, new address[](0), new Post[](0), new Message[](0));
@@ -51,37 +64,34 @@ contract ModernSocialMedia {
         emit PostCreated(msg.sender, users[msg.sender].posts.length - 1);
     }
 
-    function addComment(uint256 _postId, string memory _content) public onlyExistingUser {
-        require(_postId < users[msg.sender].posts.length, "Invalid post ID");
+    function addComment(uint256 _postId, string memory _content) public onlyExistingUser validPost(_postId) {
         Comment memory newComment = Comment(msg.sender, _content, block.timestamp);
         users[msg.sender].postComments[_postId].push(newComment);
         emit CommentAdded(msg.sender, _postId, users[msg.sender].postComments[_postId].length - 1);
     }
 
-    function likePost(address _author, uint256 _postId) public onlyExistingUser {
-        require(users[_author].posts.length > _postId, "Invalid post ID");
+    function likePost(address _author, uint256 _postId) public onlyExistingUser validPost(_postId) {
         users[_author].posts[_postId].likes++;
         emit PostLiked(msg.sender, _author, _postId);
     }
 
     function followUser(address _userToFollow) public onlyExistingUser {
         require(_userToFollow != msg.sender && bytes(users[_userToFollow].name).length > 0, "Invalid user");
-        users[msg.sender].following[_userToFollow] = true;
+        users[msg.sender].followers[_userToFollow] = true;
         users[_userToFollow].followers[msg.sender] = true;
         emit UserFollowed(msg.sender, _userToFollow);
     }
 
     function unfollowUser(address _userToUnfollow) public onlyExistingUser {
         require(users[_userToUnfollow].followers[msg.sender], "You are not following this user");
-        users[msg.sender].following[_userToUnfollow] = false;
+        users[msg.sender].followers[_userToUnfollow] = false;
         users[_userToUnfollow].followers[msg.sender] = false;
     }
 
     function updateProfile(string memory _newName, string memory _newBio, string memory _newProfilePicture) public onlyExistingUser {
-        User storage user = users[msg.sender];
-        user.name = _newName;
-        user.bio = _newBio;
-        user.profilePicture = _newProfilePicture;
+        users[msg.sender].name = _newName;
+        users[msg.sender].bio = _newBio;
+        users[msg.sender].profilePicture = _newProfilePicture;
         emit ProfileUpdated(msg.sender, _newName, _newBio, _newProfilePicture);
     }
 
