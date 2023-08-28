@@ -40,5 +40,15 @@ contract SocioMedia {
         users[msg.sender].name = _name;
         users[msg.sender].bio = _bio;  
     }
+
+    function sendmessage(address _recipient, string memory _content) public{
+        require(users[_recipient].name != "", "Recipient doesnot exist");
+
+        Message memory newMessage = Message(msg.sender, _recipient, _content, block.timestamp);
+        users[msg.sender].messages.push(newMessage);
+        users[_recipient].messages.push(newMessage);
+        messages.push(newMessage);
+    }
+
     
 }
