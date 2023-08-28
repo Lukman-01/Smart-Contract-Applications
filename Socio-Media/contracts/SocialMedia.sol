@@ -54,13 +54,12 @@ contract SocioMedia {
         return users[msg.sender].messages;
     }
 
-    function getAllUsers() public view returns(address[] memory){
-        address[] memory allUsers = new address[](address(this).balance);
-        uint i = 0;
-
-        for (address user; i<users.length; i++){
-            allUsers[i] = user;
-        }
-        return allUsers;
+    function getAllUsers() public view returns(address[] memory) {
+    address[] memory allUsers = new address[](users.length);
+    for (uint i = 0; i < allUsers.length; i++) {
+        allUsers[i] = address(users[i]);
     }
+    return allUsers;
+}
+
 }
