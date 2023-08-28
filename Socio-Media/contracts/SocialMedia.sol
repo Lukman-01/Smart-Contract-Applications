@@ -50,5 +50,17 @@ contract SocioMedia {
         messages.push(newMessage);
     }
 
-    
+    function getMessages() public view returns(Message[] memory){
+        return users[msg.sender].messages;
+    }
+
+    function getAllUsers() public view returns(address[] memory){
+        address[] memory allUsers = new address[](address(this).balance);
+        uint i = 0;
+
+        for (address user; i<users.length; i++){
+            allUsers[i] = user;
+        }
+        return allUsers;
+    }
 }
