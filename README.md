@@ -18,16 +18,7 @@ In the real estate industry, this smart contract simplifies property transaction
 
 ### Medical Industry Contract
 
-By leveraging the blockchain, this contract enhances patient data security and interoperability across medical facilities. It grants patients control over their health records, enabling authorized healthcare providers to access accurate and up-to-date medical information.
-
-### Banking System Contract
-
-This contract introduces efficiencies into the banking sector by automating processes like loan approvals, fund transfers, and interest calculations. It fosters trust between banks and customers through transparent and auditable financial operations.
-
-### Automobile Industry Contract
-
-For the automobile industry, this smart contract manages vehicle history records, ownership transfers, and warranty information. It prevents odometer fraud, ensures accurate maintenance records, and simplifies the resale process.
-
+By leveraging the blockchain, this contract enhances patient data security and interoperability across medical facilities. It grants patients control over their health records, enabling authorized healthcare providers to access accurate and up-to-date medical information. 
 ### Voting Contract
 
 The voting contract revolutionizes the democratic process by enabling secure and transparent digital voting. It guarantees one-person-one-vote, prevents tampering, and provides a verifiable and immutable record of election results.
@@ -37,8 +28,6 @@ The voting contract revolutionizes the democratic process by enabling secure and
 Each smart contract in this repository has undergone rigorous testing to ensure functionality and security:
 
 - **Unit Testing**: Contracts have been thoroughly tested at a granular level to verify the correctness of individual functions and components.
-
-- **Integration Testing**: Interactions between different components and external systems have been rigorously tested to ensure seamless functionality.
 
 - **Security Audits**: Smart contracts have been audited by experts to identify and mitigate vulnerabilities, ensuring the contracts are resilient against potential attacks.
 
