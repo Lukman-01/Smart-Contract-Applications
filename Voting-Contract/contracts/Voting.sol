@@ -34,5 +34,31 @@ contract Lock {
 
     mapping (address => Candidate) public candidates;
 
+    struct Voter{
+        uint voter_voterId;
+        string voter_name;
+        string voter_image;
+        address voter_address;
+        uint voter_allowed;
+        bool voter_voted;
+        uint voter_vote;
+        string voter_ipfs;
+    }
+
+    mapping(address => Voter) public voters;
+    address[] public votedVoters;
+    address[] public votersAddress;
+
+    event VoterCreated(
+        uint indexed voter_voterId,
+        string voter_name,
+        string voter_image,
+        address voter_address,
+        uint voter_allowed,
+        bool voter_voted,
+        uint voter_vote,
+        string voter_ipfs
+    );
+
     
 }
