@@ -33,4 +33,6 @@ contract Lock {
     address[] public candidateAddress;
 
     mapping (address => Candidate) public candidates;
+
+    
 }
