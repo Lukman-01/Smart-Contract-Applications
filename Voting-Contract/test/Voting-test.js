@@ -146,6 +146,4 @@ describe('Voting Contract', function () {
     ).to.be.revertedWith('Invalid candidate ID');
   });
 
-  // Add more test cases for the contract's functions
-
 });
