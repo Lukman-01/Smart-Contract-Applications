@@ -75,7 +75,16 @@ contract ModernSocialMedia {
      */
     function createUser(string memory _name, string memory _bio, string memory _profilePicture) public {
         require(bytes(_name).length > 0, "Name cannot be empty");
-        users[msg.sender] = User(_name, _bio, _profilePicture, new address[](0), new Post[](0), new Message[](0));
+
+        User storage newUser = users[msg.sender];
+        newUser.name = _name;
+        newUser.bio = _bio;
+        newUser.profilePicture = _profilePicture;
+
+        // Initialize other fields as empty arrays
+        newUser.friends = new address[](0);
+        newUser.posts = new Post[](0);
+        newUser.messages = new Message[](0);
     }
 
     /**
