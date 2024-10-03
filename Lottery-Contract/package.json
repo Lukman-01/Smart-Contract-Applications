@@ -1,5 +1,5 @@
 {
-  "name": "other-contracts",
+  "name": "lottery-contract",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -14,6 +14,9 @@
     "hardhat": "^2.22.9"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.2"
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.4.5"
   }
 }
+
+
