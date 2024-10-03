@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.26;
 
 /**
  * @title ModernSocialMedia
  * @notice This contract implements a simplified social media platform on the Ethereum blockchain.
- * Users can create posts, add comments, like posts, follow/unfollow users, update their profiles,
- * and send messages to other users.
  */
 contract ModernSocialMedia {
     struct User {
         string name;
         string bio;
         string profilePicture;
-        address[] friends;
         mapping(address => bool) isFriend;
-        Post[] posts;
-        Message[] messages;
+        Post[] posts; // Dynamic array for posts
+        Message[] messages; // Dynamic array for messages
         mapping(address => bool) followers;
-        mapping(uint256 => Comment[]) postComments;
     }
 
     struct Post {
@@ -41,29 +37,24 @@ contract ModernSocialMedia {
     }
 
     mapping(address => User) public users;
+    // Store comments by postId
+    mapping(uint256 => Comment[]) public postComments; 
+    uint256 public postCount; // To track the number of posts created
 
     event PostCreated(address indexed author, uint256 indexed postId);
-    event CommentAdded(address indexed author, uint256 indexed postId, uint256 commentId);
+    event CommentAdded(address indexed author, uint256 indexed postId);
     event UserFollowed(address indexed follower, address indexed following);
     event PostLiked(address indexed liker, address indexed author, uint256 indexed postId);
     event ProfileUpdated(address indexed user, string newName, string newBio, string newProfilePicture);
     event MessageSent(address indexed sender, address indexed recipient, string content);
 
-    /**
-     * @dev Modifier to restrict access to only existing users.
-     * It checks if the sender's name is not an empty string.
-     */
     modifier onlyExistingUser() {
         require(bytes(users[msg.sender].name).length > 0, "User does not exist");
         _;
     }
 
-    /**
-     * @dev Modifier to check the validity of a post ID.
-     * @param _postId The ID of the post to be checked.
-     */
     modifier validPost(uint256 _postId) {
-        require(_postId < users[msg.sender].posts.length, "Invalid post ID");
+        require(_postId < postCount, "Invalid post ID");
         _;
     }
 
@@ -80,11 +71,6 @@ contract ModernSocialMedia {
         newUser.name = _name;
         newUser.bio = _bio;
         newUser.profilePicture = _profilePicture;
-
-        // Initialize other fields as empty arrays
-        newUser.friends = new address[](0);
-        newUser.posts = new Post[](0);
-        newUser.messages = new Message[](0);
     }
 
     /**
@@ -94,7 +80,8 @@ contract ModernSocialMedia {
     function createPost(string memory _content) public onlyExistingUser {
         Post memory newPost = Post(msg.sender, _content, block.timestamp, 0);
         users[msg.sender].posts.push(newPost);
-        emit PostCreated(msg.sender, users[msg.sender].posts.length - 1);
+        emit PostCreated(msg.sender, postCount);
+        postCount++;
     }
 
     /**
@@ -104,8 +91,8 @@ contract ModernSocialMedia {
      */
     function addComment(uint256 _postId, string memory _content) public onlyExistingUser validPost(_postId) {
         Comment memory newComment = Comment(msg.sender, _content, block.timestamp);
-        users[msg.sender].postComments[_postId].push(newComment);
-        emit CommentAdded(msg.sender, _postId, users[msg.sender].postComments[_postId].length - 1);
+        postComments[_postId].push(newComment);
+        emit CommentAdded(msg.sender, _postId);
     }
 
     /**
