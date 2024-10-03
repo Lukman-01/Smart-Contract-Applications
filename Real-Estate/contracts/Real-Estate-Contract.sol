@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
-
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+pragma solidity ^0.8.26;
 
 /**
  * @title RealEstate
  * @dev A smart contract for managing real estate properties on the Ethereum blockchain.
  */
 contract RealEstate {
-    using SafeMath for uint256;
 
     struct Property {
         uint price;            // Price of the property in Wei (smallest unit of Ether)

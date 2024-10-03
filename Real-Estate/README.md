@@ -1,19 +1,56 @@
-# Security vulnerabilities in the V1 of the Solidity code are identified below:
+# RealEstate Smart Contract
 
-1. Lack of Access Control: There is no access control mechanism implemented in the contract, meaning anyone can list a property for sale or buy a property without any restrictions. This can lead to unauthorized access and manipulation of property listings.
+## Overview
+The **RealEstate** smart contract is a decentralized solution for managing real estate properties on the Ethereum blockchain. It allows users to list properties for sale, purchase properties, and withdraw listings from sale. The contract is built using Solidity and is deployed on the **Lisk Sepolia** testnet.
 
-2. Lack of Function Modifiers: There are no function modifiers in place to restrict access to certain functions based on conditions. For example, only the owner of a property should be able to update its details, but there's no check for that in the code.
+## Features
+- **List Property for Sale**: Users can list their properties with details such as price, name, description, and location.
+- **Purchase Property**: Buyers can purchase properties by sending Ether, and ownership is transferred automatically.
+- **Withdraw Property**: Owners can remove their properties from sale.
+- **Events**: The contract emits events for property listing, purchase, and withdrawal.
 
-3. Integer Overflow and Underflow: The code does not use `SafeMath` for arithmetic operations, which can lead to integer overflow or underflow vulnerabilities when dealing with `uint256` values. For example, if the `price` of a property is too large, an overflow can occur when adding or subtracting amounts.
+## Technologies
+- **Solidity Version**: 0.8.26
+- **Network**: Lisk Sepolia testnet
+- **Tools**:
+  - [Hardhat](https://hardhat.org/)
+  - [Blockscout](https://sepolia-blockscout.lisk.com/)
 
-4. Missing Input Validation: The contract does not validate input parameters in the functions. For instance, the `_id` parameter is used directly without checking if it exists in the `properties` mapping, which can lead to unexpected behavior.
+## Installation
 
-5. Direct Transfer of Funds: In the `buyProperty` function, the contract directly transfers the property price to the `previousOwner` without checking if the `transfer` succeeded. If the `previousOwner` is a contract with a fallback function, the funds transfer could fail, leaving the property in a locked state.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Lukman-01/Smart-Contract-Applications.git
+   cd Real-Estate
+   ```
 
-6. Lack of Withdrawal Pattern: The contract allows anyone to list a property for sale, but there's no mechanism for the original owner to withdraw the property if it is no longer for sale. This can lead to locking the property and the owner's funds.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-7. Lack of Error Handling: The contract does not handle errors properly. For example, if the `transfer` fails, the contract will not revert the transaction, leaving the property in an inconsistent state.
+3. Set up your environment variables in a `.env` file:
+   ```
+   LISK_RPC_URL=your-lisk-sepolia-rpc-url
+   PRIVATE_KEY=your-private-key
+   ```
 
-8. String Operations: Using `string` data types for storing property details can lead to high gas costs and possible out-of-gas errors if the strings are too large.
+4. Compile the smart contracts:
+   ```bash
+   npx hardhat compile
+   ```
 
-9. Front Running: The contract does not protect against front-running attacks, where malicious actors can attempt to submit transactions to buy a property before the original buyer's transaction is processed.
+5. Deploy the contract:
+   ```bash
+   npx hardhat ignition deploy ./ignition/modules/deploy.ts --network lisk-sepolia --verify
+   ```
+
+Deployed Addresses
+
+RealEstateModule#RealEstate - 0x357BDC4DF7460135FA6B370484780EB860EF07cA
+
+Verifying deployed contracts
+
+Verifying contract "contracts/Real-Estate-Contract.sol:RealEstate" for network lisk-sepolia...
+Successfully verified contract "contracts/Real-Estate-Contract.sol:RealEstate" for network lisk-sepolia:
+  - https://sepolia-blockscout.lisk.com//address/0x357BDC4DF7460135FA6B370484780EB860EF07cA#code
