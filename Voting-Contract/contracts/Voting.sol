@@ -1,30 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-// Import Ownable from OpenZeppelin for access control.
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-// Import Counters from OpenZeppelin for counting operations.
-import "@openzeppelin/contracts/utils/Counters.sol";
-
-// Import SafeMath from OpenZeppelin for safe arithmetic operations.
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 /**
  * @title Voting
  * @dev A smart contract for managing candidates and voters in an election.
- * It extends the Ownable contract to provide basic access control.
  */
-
-contract Voting is Ownable {
-    using Counters for Counters.Counter;
-    using SafeMath for uint256;
-
+contract Voting {
     // Counter for assigning unique voter IDs.
-    Counters.Counter private _voterId;
+    uint256 private _voterId;
 
     // Counter for assigning unique candidate IDs.
-    Counters.Counter private _candidateId;
+    uint256 private _candidateId;
 
     // Struct to represent a Candidate.
     struct Candidate {
@@ -59,9 +45,9 @@ contract Voting is Ownable {
         uint256 voterId;
         string name;
         string image;
-        uint256 allowed;
+        uint256 allowed; // 1 if allowed, 0 otherwise
         bool voted;
-        uint256 voterVote; // Renamed parameter to resolve the conflict
+        uint256 voterVote; // ID of the candidate the voter voted for
         string ipfs;
     }
 
@@ -81,22 +67,21 @@ contract Voting is Ownable {
         string image,
         uint256 allowed,
         bool voted,
-        uint256 voterVote, // Renamed parameter to match the struct field
+        uint256 voterVote,
         string ipfs
     );
 
     /**
      * @dev Constructor function.
-     * It initializes the contract and increments the voter and candidate IDs.
+     * It initializes the contract and sets the initial voter and candidate IDs.
      */
     constructor() {
-        _candidateId.increment();
-        _voterId.increment();
+        _candidateId = 0;
+        _voterId = 0;
     }
 
     /**
      * @dev Function to add a new candidate to the election.
-     * Only the contract owner can call this function.
      * @param _add The Ethereum address of the candidate.
      * @param _name The name of the candidate.
      * @param _age The age of the candidate.
@@ -109,9 +94,9 @@ contract Voting is Ownable {
         string memory _age,
         string memory _image,
         string memory _ipfs
-    ) external onlyOwner {
-        _candidateId.increment();
-        uint256 idNumber = _candidateId.current();
+    ) external {
+        _candidateId++;
+        uint256 idNumber = _candidateId;
 
         Candidate storage candidate = candidates[_add];
         candidate.candidateId = idNumber;
@@ -183,7 +168,6 @@ contract Voting is Ownable {
 
     /**
      * @dev Function to register a new voter for the election.
-     * Only the contract owner can call this function.
      * @param _add The Ethereum address of the voter.
      * @param _name The name of the voter.
      * @param _image The image URL of the voter.
@@ -194,9 +178,9 @@ contract Voting is Ownable {
         string memory _name,
         string memory _image,
         string memory _ipfs
-    ) external onlyOwner {
-        _voterId.increment();
-        uint256 idNumber = _voterId.current();
+    ) external {
+        _voterId++;
+        uint256 idNumber = _voterId;
 
         Voter storage voter = voters[_add];
         require(voter.allowed == 0, "Already registered");
@@ -242,9 +226,7 @@ contract Voting is Ownable {
             "Invalid candidate ID"
         );
 
-        candidates[_candidateAddress].voteCount = candidates[_candidateAddress]
-            .voteCount
-            .add(1);
+        candidates[_candidateAddress].voteCount += 1; // Increment vote count
         voter.voted = true;
         voter.voterVote = _candidateVoteId;
 
@@ -279,7 +261,7 @@ contract Voting is Ownable {
             string memory image,
             uint256 allowed,
             bool voted,
-            uint256 voterVote, // Renamed parameter to match the struct field
+            uint256 voterVote,
             string memory ipfs
         )
     {

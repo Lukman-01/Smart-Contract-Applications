@@ -56,4 +56,8 @@ Verifying deployed contracts
 
 Verifying contract "contracts/Lottery.sol:Lottery" for network lisk-sepolia...
 Successfully verified contract "contracts/Lottery.sol:Lottery" for network lisk-sepolia:
-  - https://sepolia-blockscout.lisk.com//address/0x88206940e27BEA394DbC851a34ac44b78B6ff553#code
+  - https://sepolia-blockscout.lisk.com//address/0x88206940e27BEA394DbC851a34ac44b78B6ff553#
+  
+### Authors
+
+Abdulyekeen Lukman(Ibukun)

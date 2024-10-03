@@ -54,3 +54,7 @@ ModernSocialMediaModule#ModernSocialMedia - 0x43dc52c81ef4236D1dF4490C98883cfF69
 Verifying contract "contracts/SocialMedia.sol:ModernSocialMedia" for network lisk-sepolia...
 Successfully verified contract "contracts/SocialMedia.sol:ModernSocialMedia" for network lisk-sepolia:
   - https://sepolia-blockscout.lisk.com/address/0x43dc52c81ef4236D1dF4490C98883cfF69AD482D#code
+
+### Authors
+
+Abdulyekeen Lukman(Ibukun)

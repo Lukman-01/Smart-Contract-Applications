@@ -54,3 +54,7 @@ Verifying deployed contracts
 Verifying contract "contracts/Real-Estate-Contract.sol:RealEstate" for network lisk-sepolia...
 Successfully verified contract "contracts/Real-Estate-Contract.sol:RealEstate" for network lisk-sepolia:
   - https://sepolia-blockscout.lisk.com//address/0x357BDC4DF7460135FA6B370484780EB860EF07cA#code
+
+### Authors
+
+Abdulyekeen Lukman(Ibukun)

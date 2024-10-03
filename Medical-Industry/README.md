@@ -57,3 +57,7 @@ Verifying deployed contracts
 Verifying contract "contracts/Medical-History.sol:MedicalHistory" for network lisk-sepolia...
 Successfully verified contract "contracts/Medical-History.sol:MedicalHistory" for network lisk-sepolia:
   - https://sepolia-blockscout.lisk.com/address/0xB0CfEDc9518A7ce2D593008Ba16503c9e09D1E1F#code
+
+### Authors
+
+Abdulyekeen Lukman(Ibukun)
