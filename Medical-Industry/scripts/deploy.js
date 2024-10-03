@@ -2,17 +2,14 @@ const hre = require("hardhat");
 
 async function main() {
   const MedicalHistory = await hre.ethers.getContractFactory("MedicalHistory");
-  const initialDoctors = [ // Add addresses of initial authorized doctors
-    "0xAddress1",
-    "0xAddress2",
-    // Add more addresses if needed
-  ];
 
+  const initialDoctors = ["0x40feacdeee6f017fA2Bc1a8FB38b393Cf9022d71","0x186a761645f2A264ad0A655Fb632Ca99150803A9"];
+
+  // Deploy the contract with the initial doctor addresses as constructor argument
   const medicalHistory = await MedicalHistory.deploy(initialDoctors);
 
-  await medicalHistory.deployed();
-
-  console.log("MedicalHistory deployed to:", medicalHistory.address);
+  // Log the deployed contract address
+  console.log("MedicalHistory deployed to:", medicalHistory);
 }
 
 main()
@@ -21,3 +18,14 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+// const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
+
+// const initialDoctors = ["0x40feacdeee6f017fA2Bc1a8FB38b393Cf9022d71","0x186a761645f2A264ad0A655Fb632Ca99150803A9"];
+
+// module.exports = buildModule("MedicalHistoryModule", (m) => {
+
+//   const MedicalHistory = m.contract("MedicalHistory", initialDoctors);
+
+//   return { MedicalHistory };
+// });

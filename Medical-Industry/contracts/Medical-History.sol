@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
-
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+pragma solidity ^0.8.26;
 
 /**
  * @title MedicalHistory
  * @dev A smart contract for managing patient medical history.
  */
-contract MedicalHistory is AccessControl {
-    using Counters for Counters.Counter;
-    Counters.Counter private patientIds;
+contract MedicalHistory {
+    uint256 private patientIdCounter; // Manual counter for patient IDs
+    address public owner;
 
-    bytes32 public constant DOCTOR_ROLE = keccak256("DOCTOR_ROLE");
+    mapping(address => bool) public doctors;
 
     struct Patient {
         string name;
@@ -31,14 +28,28 @@ contract MedicalHistory is AccessControl {
      * @param _initialDoctors Addresses of initial authorized doctors.
      */
     constructor(address[] memory _initialDoctors) {
+        owner = msg.sender;
         for (uint256 i = 0; i < _initialDoctors.length; i++) {
-            _setupRole(DOCTOR_ROLE, _initialDoctors[i]);
+            doctors[_initialDoctors[i]] = true;
         }
     }
 
-    modifier onlyDoctor() {
-        require(hasRole(DOCTOR_ROLE, msg.sender), "Restricted to doctors");
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Restricted to contract owner");
         _;
+    }
+
+    modifier onlyDoctor() {
+        require(doctors[msg.sender], "Restricted to authorized doctors");
+        _;
+    }
+
+    /**
+     * @dev Adds a new doctor to the list of authorized doctors.
+     * @param _doctor Address of the new doctor.
+     */
+    function addDoctor(address _doctor) public onlyOwner {
+        doctors[_doctor] = true;
     }
 
     /**
@@ -58,7 +69,7 @@ contract MedicalHistory is AccessControl {
         string[] memory _medications,
         string[] memory _procedures
     ) public onlyDoctor {
-        uint256 patientId = patientIds.current();
+        uint256 patientId = patientIdCounter;
         patients[patientId] = Patient({
             name: _name,
             age: _age,
@@ -68,7 +79,7 @@ contract MedicalHistory is AccessControl {
             procedures: _procedures,
             lastUpdated: block.timestamp
         });
-        patientIds.increment();
+        patientIdCounter++;
     }
 
     /**
