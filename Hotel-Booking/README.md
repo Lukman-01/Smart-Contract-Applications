@@ -43,5 +43,13 @@ This project is a **decentralized hotel management system** built on the Ethereu
 5. **Deploy the Contract**:
    Deploy to the desired network:
    ```bash
-   npx hardhat run scripts/deploy.ts --network lisk-sepolia
+   npx hardhat ignition deploy ./ignition/modules/deploy.ts --network lisk-sepolia --verify
    ```
+
+   Deployed Addresses
+
+   HotelModule#Hotel - 0xBFFdB9F0f2D3134A4490134B45D99A17F7588D76
+
+   Verifying deployed contracts
+   Successfully verified contract Hotel on the block explorer.
+   https://sepolia-blockscout.lisk.com/address/0xBFFdB9F0f2D3134A4490134B45D99A17F7588D76#code
